@@ -1,0 +1,3 @@
+ALTER TABLE users
+    ADD COLUMN IF NOT EXISTS cv_path VARCHAR(500) NULL AFTER face_image_path,
+    ADD COLUMN IF NOT EXISTS cv_hash  CHAR(64)    NULL AFTER cv_path;

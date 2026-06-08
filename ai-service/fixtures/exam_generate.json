@@ -1,0 +1,9 @@
+{
+  "questions": [
+    {"text": "What is the primary purpose of an index in a database?", "type": "mcq", "options": ["To store data", "To speed up queries", "To encrypt data", "To backup data"], "correct_answer": 1, "difficulty": "easy", "points": 10},
+    {"text": "Which HTTP method is idempotent?", "type": "mcq", "options": ["POST", "PUT", "PATCH", "All of the above"], "correct_answer": 1, "difficulty": "medium", "points": 10},
+    {"text": "What is the difference between authentication and authorization?", "type": "written", "expected_answer": "Authentication verifies identity, authorization determines permissions.", "difficulty": "medium", "points": 15},
+    {"text": "What does ACID stand for in database transactions?", "type": "mcq", "options": ["Atomicity, Consistency, Isolation, Durability", "Access, Control, Identity, Data", "Async, Cache, Index, Deploy", "None of the above"], "correct_answer": 0, "difficulty": "easy", "points": 10},
+    {"text": "Explain the concept of dependency injection and its benefits.", "type": "written", "expected_answer": "DI is a design pattern where dependencies are provided externally rather than created internally, improving testability and decoupling.", "difficulty": "hard", "points": 15}
+  ]
+}

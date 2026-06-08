@@ -1,0 +1,6 @@
+{
+  "questions": [
+    {"text": "What is the primary purpose of normalization in databases?", "type": "mcq", "options": ["Speed up queries", "Reduce data redundancy", "Increase storage", "Add security"], "correct_answer": 1, "difficulty": "easy", "points": 10},
+    {"text": "Explain REST API design principles.", "type": "written", "expected_answer": "RESTful APIs use HTTP methods, stateless communication, and resource-based URIs.", "difficulty": "medium", "points": 15}
+  ]
+}

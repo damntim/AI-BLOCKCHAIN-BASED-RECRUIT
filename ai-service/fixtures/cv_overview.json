@@ -1,0 +1,11 @@
+{
+  "extractable": true,
+  "name": "Jane Doe",
+  "summary": "Experienced software developer with a strong background in web technologies and cloud platforms. Demonstrates consistent delivery of high-quality projects and collaborative teamwork.",
+  "skills": ["PHP", "Python", "JavaScript", "MySQL", "REST APIs", "Docker"],
+  "experience_years": 4,
+  "education": "BSc Computer Science, University of Nairobi",
+  "strengths": ["Strong technical background", "Good communication skills", "Project delivery track record"],
+  "improvement_areas": ["Leadership experience limited", "No formal certifications listed"],
+  "overall_impression": "A solid mid-level candidate with relevant technical skills and potential for growth."
+}

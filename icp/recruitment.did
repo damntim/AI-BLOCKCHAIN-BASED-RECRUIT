@@ -1,0 +1,170 @@
+// Candid interface for the RecruitChain canister
+// Matches icp/src/recruitment/main.mo
+
+type UserRecord = record {
+  userId       : nat;
+  identityHash : text;
+  registeredAt : int;
+  faceVerified : bool;
+};
+
+type JobRecord = record {
+  jobId     : nat;
+  jobHash   : text;
+  positions : nat;
+  deadline  : int;
+  postedAt  : int;
+};
+
+type ExamRecord = record {
+  userId        : nat;
+  jobId         : nat;
+  score         : nat;
+  antiCheatHash : text;
+  cheatScore    : nat;
+  outcome       : text;
+  submittedAt   : int;
+};
+
+type InterviewRecord = record {
+  userId         : nat;
+  jobId          : nat;
+  score          : nat;
+  transcriptHash : text;
+  completedAt    : int;
+};
+
+type HiringResult = record {
+  jobId       : nat;
+  winnerIds   : vec nat;
+  finalScores : vec nat;
+  declaredAt  : int;
+};
+
+// New types (ICP-GUIDE.md additions)
+
+type ExamConfig = record {
+  jobId        : nat;
+  numQuestions : nat;
+  timeLimitMin : nat;
+  openEnded    : nat;
+  closedEnded  : nat;
+  sealedAt     : int;
+};
+
+type CredentialVerification = record {
+  userId       : nat;
+  credHash     : text;
+  aiMatchScore : nat;
+  userEdited   : bool;
+  storedAt     : int;
+};
+
+type ExamSchedule = record {
+  jobId         : nat;
+  startEpoch    : int;
+  endEpoch      : int;
+  extendedEpoch : int;
+  sealedAt      : int;
+};
+
+type InterviewSchedule = record {
+  jobId          : nat;
+  startEpoch     : int;
+  candidateCount : nat;
+  sealedAt       : int;
+};
+
+type JobOffer = record {
+  jobId         : nat;
+  userId        : nat;
+  overallRank   : nat;
+  offerAccepted : bool;
+  recordedAt    : int;
+};
+
+type AuditEntry = record {
+  eventType : text;
+  actor_id  : nat;
+  payload   : text;
+  timestamp : int;
+};
+
+type StorageStats = record {
+  users         : nat;
+  credentials   : nat;
+  companies     : nat;
+  jobs          : nat;
+  applications  : nat;
+  examResults   : nat;
+  interviews    : nat;
+  hiringResults : nat;
+  examConfigs   : nat;
+  credVerif     : nat;
+  examSchedules : nat;
+  ivSchedules   : nat;
+  jobOffers     : nat;
+  auditLog      : nat;
+};
+
+service : {
+  // ── User ────────────────────────────────────────────────────────────────
+  registerUser      : (nat, text)       -> (bool);
+  setFaceVerified   : (nat)             -> (bool);
+  getUser           : (nat)             -> (opt UserRecord) query;
+
+  // ── Credentials ─────────────────────────────────────────────────────────
+  storeCredential   : (nat, text, text) -> (bool);
+  verifyCredential  : (nat, text, text) -> (bool) query;
+
+  // ── Company ─────────────────────────────────────────────────────────────
+  approveCompany    : (nat, text)       -> (bool);
+  isCompanyApproved : (nat)             -> (bool) query;
+
+  // ── Jobs ────────────────────────────────────────────────────────────────
+  sealJob           : (nat, text, nat, int) -> (bool);
+  getJob            : (nat)             -> (opt JobRecord) query;
+
+  // ── Applications ────────────────────────────────────────────────────────
+  logApplication    : (nat, nat)        -> (bool);
+  hasApplied        : (nat, nat)        -> (bool) query;
+
+  // ── Exams ───────────────────────────────────────────────────────────────
+  recordExam        : (nat, nat, nat, text, nat, text) -> (bool);
+  getExamResult     : (nat, nat)        -> (opt ExamRecord) query;
+
+  // ── Interviews ───────────────────────────────────────────────────────────
+  recordInterview   : (nat, nat, nat, text) -> (bool);
+  getInterview      : (nat, nat)        -> (opt InterviewRecord) query;
+
+  // ── Hiring results ───────────────────────────────────────────────────────
+  declareWinners    : (nat, vec nat, vec nat) -> (bool);
+  getHiringResult   : (nat)             -> (opt HiringResult) query;
+  isWinner          : (nat, nat)        -> (bool) query;
+
+  // ── Exam configuration ───────────────────────────────────────────────────
+  storeExamConfig   : (nat, nat, nat, nat, nat) -> (bool);
+  getExamConfig     : (nat)             -> (opt ExamConfig) query;
+
+  // ── Credential verification audit ────────────────────────────────────────
+  storeCredentialVerification : (nat, text, nat, bool) -> (bool);
+  getCredentialVerification   : (nat, text)  -> (opt CredentialVerification) query;
+
+  // ── Exam schedule ─────────────────────────────────────────────────────────
+  storeExamSchedule : (nat, int, int, int) -> (bool);
+  getExamSchedule   : (nat)             -> (opt ExamSchedule) query;
+
+  // ── Interview schedule ────────────────────────────────────────────────────
+  storeInterviewSchedule : (nat, int, nat) -> (bool);
+  getInterviewSchedule   : (nat)        -> (opt InterviewSchedule) query;
+
+  // ── Job offer record ──────────────────────────────────────────────────────
+  storeOffer        : (nat, nat, nat, bool) -> (bool);
+  getOffer          : (nat, nat)        -> (opt JobOffer) query;
+
+  // ── Audit log ───────────────────────────────────────────────────────────────
+  getJobAuditLog    : (nat)             -> (vec AuditEntry) query;
+
+  // ── Storage statistics ───────────────────────────────────────────────────────
+  getStorageStats   : ()                -> (StorageStats) query;
+}

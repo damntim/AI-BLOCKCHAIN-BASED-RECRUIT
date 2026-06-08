@@ -1,0 +1,21 @@
+CREATE TABLE IF NOT EXISTS users (
+    id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    email            VARCHAR(255) UNIQUE NOT NULL,
+    password         VARCHAR(255) NOT NULL,
+    role             ENUM('SEEKER','COMPANY','ADMIN') NOT NULL,
+    full_name        VARCHAR(255) NOT NULL,
+    phone            VARCHAR(50),
+    country          VARCHAR(100),
+    date_of_birth    DATE,
+    face_descriptor  JSON,
+    face_verified    TINYINT(1) DEFAULT 0,
+    face_image_path  VARCHAR(500),
+    identity_hash    CHAR(64),
+    icp_confirmed    TINYINT(1) DEFAULT 0,
+    is_suspended     TINYINT(1) DEFAULT 0,
+    suspended_reason TEXT,
+    login_attempts   INT DEFAULT 0,
+    locked_until     DATETIME,
+    created_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at       TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

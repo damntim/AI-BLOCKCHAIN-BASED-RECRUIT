@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(Get-Content \"c:\\\\xampp\\\\htdocs\\\\danny_capstone\\\\database\\\\migrations\\\\015_exam_proctoring.sql\" | & \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root recruitment_db; Write-Host \"Done $LASTEXITCODE\")",
+      "PowerShell(Get-Content \"c:\\\\xampp\\\\htdocs\\\\danny_capstone\\\\database\\\\migrations\\\\015_exam_proctoring.sql\" | & \"C:\\\\xampp\\\\mysql\\\\bin\\\\mysql.exe\" -u root -h 127.0.0.1 -P 3306 recruitment_db; Write-Host \"Done $LASTEXITCODE\")"
+    ]
+  }
+}

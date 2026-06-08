@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Brand */
+    --color-primary:       #1E5FA8;
+    --color-primary-dark:  #154680;
+    --color-primary-light: #EBF3FC;
+    --color-primary-mid:   #C5D8EE;
+
+    /* Surfaces */
+    --color-surface:       #FFFFFF;
+    --color-surface-soft:  #F7FAFD;
+    --color-surface-muted: #EEF3F8;
+
+    /* Text */
+    --color-text-primary:  #1A2332;
+    --color-text-secondary:#4A6380;
+    --color-text-muted:    #8FAABF;
+
+    /* Status */
+    --color-success:       #1A7A4A;
+    --color-success-bg:    #E8F5EE;
+    --color-warning:       #B05C00;
+    --color-warning-bg:    #FFF3E6;
+    --color-danger:        #C0392B;
+    --color-danger-bg:     #FDECEA;
+    --color-info:          #1E5FA8;
+    --color-info-bg:       #EBF3FC;
+
+    /* Structure */
+    --border-color:        #C5D8EE;
+    --border-radius:       6px;
+    --border-radius-lg:    10px;
+    --border-radius-xl:    14px;
+
+    /* Fonts */
+    --font-display: 'Syne', sans-serif;
+    --font-body:    'Plus Jakarta Sans', sans-serif;
+    --font-mono:    ui-monospace, 'Cascadia Code', Consolas, monospace;
+  }
+
+  html {
+    font-family: var(--font-body);
+  }
+
+  body {
+    font-family: var(--font-body);
+    color: var(--color-text-primary);
+    background-color: var(--color-surface-soft);
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Ensure Alpine x-cloak elements are hidden before Alpine initialises */
+  [x-cloak] {
+    display: none !important;
+  }
+}

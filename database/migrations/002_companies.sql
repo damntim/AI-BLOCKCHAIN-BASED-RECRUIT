@@ -1,0 +1,23 @@
+CREATE TABLE IF NOT EXISTS companies (
+    id                  INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id             INT UNSIGNED NOT NULL,
+    company_name        VARCHAR(255) NOT NULL,
+    reg_number          VARCHAR(100),
+    industry            VARCHAR(100),
+    size                VARCHAR(50),
+    website             VARCHAR(255),
+    address             TEXT,
+    reg_cert_path       VARCHAR(500),
+    reg_cert_hash       CHAR(64),
+    tax_doc_path        VARCHAR(500),
+    tax_doc_hash        CHAR(64),
+    verification_status ENUM('PENDING','APPROVED','REJECTED') DEFAULT 'PENDING',
+    verified_at         DATETIME,
+    verified_by         INT UNSIGNED,
+    rejection_reason    TEXT,
+    company_hash        CHAR(64),
+    icp_confirmed       TINYINT(1) DEFAULT 0,
+    created_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at          TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

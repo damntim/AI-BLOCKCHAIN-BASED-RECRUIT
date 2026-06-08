@@ -1,0 +1,4 @@
+ALTER TABLE jobs
+    ADD COLUMN IF NOT EXISTS interview_time_limit_min  INT UNSIGNED DEFAULT 5,
+    ADD COLUMN IF NOT EXISTS interview_max_questions   INT UNSIGNED DEFAULT 5,
+    ADD COLUMN IF NOT EXISTS interview_end_at          DATETIME DEFAULT NULL;

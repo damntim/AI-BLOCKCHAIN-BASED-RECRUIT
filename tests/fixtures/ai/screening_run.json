@@ -1,0 +1,6 @@
+{
+  "candidates": [
+    {"id": 1, "total_score": 82.5, "skills_score": 21, "experience_score": 20, "education_score": 22, "credentials_score": 19.5, "explanation": "Strong match for job requirements."},
+    {"id": 2, "total_score": 68.0, "skills_score": 16, "experience_score": 18, "education_score": 18, "credentials_score": 16, "explanation": "Adequate candidate with some gaps."}
+  ]
+}

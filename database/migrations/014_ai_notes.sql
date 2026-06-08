@@ -1,0 +1,5 @@
+ALTER TABLE user_education
+    ADD COLUMN IF NOT EXISTS ai_notes TEXT DEFAULT NULL;
+
+ALTER TABLE user_certificates
+    ADD COLUMN IF NOT EXISTS ai_notes TEXT DEFAULT NULL;

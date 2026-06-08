@@ -1,0 +1,6 @@
+{
+  "candidates": [
+    {"id": 1, "total_score": 85.5, "skills_score": 22, "experience_score": 20, "education_score": 23, "credentials_score": 20.5, "explanation": "Strong technical skills matching requirements. Good experience level with relevant projects."},
+    {"id": 2, "total_score": 72.0, "skills_score": 18, "experience_score": 17, "education_score": 20, "credentials_score": 17, "explanation": "Adequate skills but limited direct experience. Education background is relevant."}
+  ]
+}
