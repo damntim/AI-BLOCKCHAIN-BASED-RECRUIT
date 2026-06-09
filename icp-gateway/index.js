@@ -69,6 +69,9 @@ const routes = [
 
     // Audit log (ICP-GUIDE #6)
     ['/audit/job',           (b) => h.getJobAuditLog(b.jobId)],
+
+    // Storage stats
+    ['/stats',               (_b) => h.getStorageStats()],
 ];
 
 routes.forEach(([path, fn]) => {
