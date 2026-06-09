@@ -162,7 +162,7 @@ try {
         }
     } catch (\Throwable $e) { error_log("ICP failed: ".$e->getMessage()); }
 
-    echo json_encode(['success'=>true,'score'=>$finalScore,'outcome'=>$outcome]);
+    echo json_encode(['success'=>true,'score'=>$finalScore]);
 
 } catch (InvalidArgumentException $e) {
     http_response_code(400); echo json_encode(['success'=>false,'error'=>$e->getMessage()]);

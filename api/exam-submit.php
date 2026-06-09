@@ -157,10 +157,8 @@ try {
     }
 
     echo json_encode([
-        'success'     => true,
-        'score'       => $totalScore,
-        'outcome'     => $outcome,
-        'cheat_score' => $cheatScore,
+        'success' => true,
+        'score'   => $totalScore,
     ]);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);

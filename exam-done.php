@@ -96,19 +96,6 @@ if ($score !== null) {
         <div class="bg-[#EBF3FC] border border-[#C5D8EE] rounded-[10px] p-6 mb-6">
           <p class="text-xs font-semibold text-[#4A6380] uppercase tracking-wider mb-2">Your Score</p>
           <p class="font-display font-extrabold text-[#1E5FA8] text-5xl"><?= number_format($score, 1) ?><span class="text-xl text-[#4A6380] font-normal">%</span></p>
-          <?php if ($outcome): ?>
-          <?php
-          $outBadge = match($outcome) {
-            'CLEAN'   => ['bg-[#E8F5EE] text-[#1A7A4A]',  'fa-shield-halved', 'Clean'],
-            'FLAGGED' => ['bg-[#FFF3E6] text-[#B05C00]',  'fa-flag',          'Flagged'],
-            default   => ['bg-[#FDECEA] text-[#C0392B]',  'fa-circle-xmark',  $outcome],
-          };
-          [$obc, $obi, $obl] = $outBadge;
-          ?>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[6px] <?= $obc ?> text-xs font-semibold mt-3">
-            <i class="fa-solid <?= $obi ?> text-[10px]"></i> Integrity: <?= $obl ?>
-          </span>
-          <?php endif; ?>
         </div>
         <p class="text-sm text-[#4A6380] mb-8 leading-relaxed">Your result has been processed and recorded on the blockchain. The company will notify you if you are selected for an interview.</p>
         <?php elseif ($score !== null): ?>

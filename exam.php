@@ -907,7 +907,7 @@ function examApp() {
                         timePerQ: this.timePerQ, reason, voiceLog: _voiceLog,
                     }),
                 })).json();
-                if (d.success) window.location.href = '/exam-done.php?score='+encodeURIComponent(d.score)+'&outcome='+encodeURIComponent(d.outcome);
+                if (d.success) window.location.href = '/exam-done.php?score='+encodeURIComponent(d.score);
             } catch(_) {}
             this.submitting = false;
         },

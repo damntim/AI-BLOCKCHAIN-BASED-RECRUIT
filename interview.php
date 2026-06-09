@@ -330,18 +330,22 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 // Tab/window visibility violations
+// Grace period of 3s before logging — projector display switches cause brief hidden states
+let _tabSwitchTimer = null;
 document.addEventListener('visibilitychange', () => {
     if (document.hidden && _appRef && _appRef._interviewStarted) {
-        _appRef.logViolation('TAB_SWITCH', 'Candidate switched tab or minimised window', 'document became hidden');
-        _appRef.violationMsg = '⚠ Tab switch detected. This has been recorded as a violation.';
+        _tabSwitchTimer = setTimeout(() => {
+            if (document.hidden && _appRef && _appRef._interviewStarted) {
+                _appRef.logViolation('TAB_SWITCH', 'Candidate switched tab or minimised window', 'document became hidden');
+                _appRef.violationMsg = '⚠ Tab switch detected. This has been recorded as a violation.';
+            }
+        }, 3000);
+    } else {
+        clearTimeout(_tabSwitchTimer);
     }
 });
 
-window.addEventListener('blur', () => {
-    if (_appRef && _appRef._interviewStarted) {
-        _appRef.logViolation('WINDOW_BLUR', 'Interview window lost focus', 'window.onblur fired');
-    }
-});
+// window.blur fires too frequently on projectors and multi-monitor setups — not logged as a violation
 
 function enterInterview() {
     document.getElementById('fs-prompt').style.display = 'none';
