@@ -64,6 +64,24 @@ $firstQuestion     = "Welcome! I'm your AI interviewer for the {$job['title']} p
 </head>
 <body class="bg-[#0a0f1a] text-white">
 
+<!-- ── External display block ────────────────────────────────────── -->
+<div id="ext-display-block" style="display:none;position:fixed;inset:0;background:#0a0f1a;z-index:10001;align-items:center;justify-content:center">
+  <div class="text-center max-w-sm mx-4">
+    <div class="w-16 h-16 bg-[#C0392B] rounded-2xl flex items-center justify-center mx-auto mb-5">
+      <i class="fas fa-tv text-white text-2xl"></i>
+    </div>
+    <h2 class="text-white font-bold text-xl mb-3">External Display Detected</h2>
+    <p class="text-slate-300 text-sm mb-4 leading-relaxed">
+      A projector, HDMI TV, or second screen is connected. External displays are not permitted during the interview.
+    </p>
+    <p class="text-slate-500 text-xs mb-6">Disconnect all external monitors and cables, then click the button below.</p>
+    <button onclick="ivCheckExternalDisplay()"
+            class="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-xl transition-colors">
+      <i class="fas fa-rotate-right mr-2"></i>I Have Disconnected — Re-check
+    </button>
+  </div>
+</div>
+
 <!-- ── Fullscreen prompt ──────────────────────────────────────────── -->
 <div id="fs-prompt">
   <div class="text-center max-w-sm mx-4">
@@ -298,6 +316,33 @@ const MAX_QUESTIONS      = <?= $maxQuestions ?>;
 const FACE_ENABLED       = <?= $faceEnabled ? 'true' : 'false' ?>;
 const STORED_DESCRIPTORS = <?= json_encode($storedDescriptor) ?>;
 
+// ── External display detection ───────────────────────────────────────────────
+function ivCheckExternalDisplay() {
+    const block = document.getElementById('ext-display-block');
+    const extendedScreen = window.screen && window.screen.isExtended === true;
+    const widthMismatch  = window.screen && (window.screen.availWidth > window.screen.width + 2);
+
+    if (extendedScreen || widthMismatch) {
+        block.style.display = 'flex';
+        return;
+    }
+    if (typeof window.getScreenDetails === 'function') {
+        window.getScreenDetails().then(sd => {
+            if (sd.screens && sd.screens.length > 1) {
+                block.style.display = 'flex';
+            } else {
+                block.style.display = 'none';
+            }
+        }).catch(() => { block.style.display = 'none'; });
+    } else {
+        block.style.display = 'none';
+    }
+}
+ivCheckExternalDisplay();
+if (window.screen && window.screen.addEventListener) {
+    window.screen.addEventListener('change', ivCheckExternalDisplay);
+}
+
 // ── Fullscreen management ────────────────────────────────────────────────────
 let _appRef = null;
 
@@ -330,22 +375,18 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 // Tab/window visibility violations
-// Grace period of 3s before logging — projector display switches cause brief hidden states
-let _tabSwitchTimer = null;
 document.addEventListener('visibilitychange', () => {
     if (document.hidden && _appRef && _appRef._interviewStarted) {
-        _tabSwitchTimer = setTimeout(() => {
-            if (document.hidden && _appRef && _appRef._interviewStarted) {
-                _appRef.logViolation('TAB_SWITCH', 'Candidate switched tab or minimised window', 'document became hidden');
-                _appRef.violationMsg = '⚠ Tab switch detected. This has been recorded as a violation.';
-            }
-        }, 3000);
-    } else {
-        clearTimeout(_tabSwitchTimer);
+        _appRef.logViolation('TAB_SWITCH', 'Candidate switched tab or minimised window', 'document became hidden');
+        _appRef.violationMsg = '⚠ Tab switch detected. This has been recorded as a violation.';
     }
 });
 
-// window.blur fires too frequently on projectors and multi-monitor setups — not logged as a violation
+window.addEventListener('blur', () => {
+    if (_appRef && _appRef._interviewStarted) {
+        _appRef.logViolation('WINDOW_BLUR', 'Interview window lost focus', 'window.onblur fired');
+    }
+});
 
 function enterInterview() {
     document.getElementById('fs-prompt').style.display = 'none';

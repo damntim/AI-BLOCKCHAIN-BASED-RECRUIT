@@ -70,6 +70,24 @@ $wsUrl = $cfg['ANTI_CHEAT_WS_URL'] ?? 'ws://localhost:8002';
       @contextmenu.prevent="violation('RIGHT_CLICK','Right-click is not allowed during the exam')"
       @keydown.window="blockKeys($event)">
 
+<!-- ══ EXTERNAL DISPLAY BLOCK ════════════════════════════════════════════ -->
+<div id="ext-display-block" class="fixed inset-0 bg-[#0f172a] flex items-center justify-center z-[10000]" style="display:none!important">
+  <div class="text-center max-w-sm px-6">
+    <div class="w-16 h-16 bg-[#C0392B] rounded-2xl flex items-center justify-center mx-auto mb-5">
+      <i class="fas fa-tv text-white text-2xl"></i>
+    </div>
+    <h2 class="text-white font-bold text-xl mb-3">External Display Detected</h2>
+    <p class="text-slate-300 text-sm mb-4 leading-relaxed">
+      A projector, HDMI TV, or second screen is connected to your device. External displays are not permitted during the exam to prevent screen sharing.
+    </p>
+    <p class="text-slate-500 text-xs mb-6">Disconnect all external monitors and HDMI/projector cables, then refresh the page to continue.</p>
+    <button onclick="checkExternalDisplay()"
+            class="w-full bg-slate-700 hover:bg-slate-600 text-white font-semibold py-3 rounded-xl transition-colors">
+      <i class="fas fa-rotate-right mr-2"></i>I Have Disconnected — Re-check
+    </button>
+  </div>
+</div>
+
 <!-- ══ FULLSCREEN GATE ══════════════════════════════════════════════════ -->
 <div id="fs-gate" class="fixed inset-0 bg-[#0f172a] flex items-center justify-center z-[9999]">
   <div class="text-center max-w-sm px-6">
@@ -417,6 +435,49 @@ const MAX_WARNINGS    = 2;
 let _terminated = false, _submitting = false, _warnCount = 0;
 const _violations = [];
 const _voiceLog   = [];
+
+// ── External display detection ───────────────────────────────────────────────
+function checkExternalDisplay() {
+    const block = document.getElementById('ext-display-block');
+
+    // window.screen.isExtended = true when more than one screen is connected
+    const extendedScreen = window.screen && window.screen.isExtended === true;
+
+    // Fallback: compare available vs actual screen dimensions.
+    // On a single screen availWidth === screen.width (within 1px).
+    // When Windows extends to a second display the total available desktop
+    // can be wider than the physical primary screen.
+    const widthMismatch = window.screen && (window.screen.availWidth > window.screen.width + 2);
+
+    // screen.getAll() from the Window Management API (Chrome 100+)
+    // isExtended is already covered above; this catches older support.
+    const hasGetAll = typeof window.getScreenDetails === 'function';
+
+    if (extendedScreen || widthMismatch) {
+        block.style.setProperty('display', 'flex', 'important');
+    } else if (hasGetAll) {
+        window.getScreenDetails().then(sd => {
+            if (sd.screens && sd.screens.length > 1) {
+                block.style.setProperty('display', 'flex', 'important');
+            } else {
+                block.style.setProperty('display', 'none', 'important');
+            }
+        }).catch(() => {
+            // Permission denied or not supported — allow exam to proceed
+            block.style.setProperty('display', 'none', 'important');
+        });
+    } else {
+        block.style.setProperty('display', 'none', 'important');
+    }
+}
+
+// Run on page load and whenever a screen is added/removed
+checkExternalDisplay();
+window.addEventListener('DOMContentLoaded', checkExternalDisplay);
+if (window.screen) {
+    // Modern browsers fire this when monitors are plugged/unplugged
+    window.screen.addEventListener && window.screen.addEventListener('change', checkExternalDisplay);
+}
 
 // ── Fullscreen ────────────────────────────────────────────────────────────────
 function enterFullscreen() {
