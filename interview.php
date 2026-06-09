@@ -9,8 +9,6 @@ require_login(); require_role('SEEKER');
 $jobId = (int)($_GET['job'] ?? 0);
 if ($jobId <= 0) { header('Location: /dashboard.php'); exit; }
 
-require_face_verified();
-
 $job = pdo()->prepare("SELECT j.*, c.company_name FROM jobs j JOIN companies c ON j.company_id=c.id WHERE j.id=?");
 $job->execute([$jobId]); $job = $job->fetch();
 if (!$job) { header('Location: /dashboard.php'); exit; }
@@ -20,8 +18,8 @@ $appCheck->execute([$jobId, current_user_id()]);
 if (!$appCheck->fetch()) { header('Location: /dashboard.php?error=no_interview'); exit; }
 
 // Create or resume interview session
-$is = pdo()->prepare("SELECT * FROM interview_sessions WHERE job_id=? AND user_id=?");
-$is->execute([$jobId, current_user_id()]); $ivSession = $is->fetch();
+$isStmt = pdo()->prepare("SELECT * FROM interview_sessions WHERE job_id=? AND user_id=?");
+$isStmt->execute([$jobId, current_user_id()]); $ivSession = $isStmt->fetch();
 if (!$ivSession) {
     pdo()->prepare("INSERT INTO interview_sessions (job_id, user_id, started_at) VALUES (?,?,NOW())")
          ->execute([$jobId, current_user_id()]);
@@ -32,240 +30,331 @@ if (!$ivSession) {
 }
 $_SESSION['interview_session_id'] = $ivSessionId;
 
-// Load stored face descriptor for in-browser comparison
 $faceRow = pdo()->prepare("SELECT face_descriptor FROM users WHERE id=?");
 $faceRow->execute([current_user_id()]);
 $storedDescriptor = json_decode($faceRow->fetchColumn() ?: '[]', true) ?: [];
 
-$faceEnabled    = is_flag_enabled('FACE_VERIFY_ENABLED');
-$wsUrl          = config()['ANTI_CHEAT_WS_URL'] ?? 'ws://localhost:8002';
-$firstQuestion  = "Welcome! I'm your AI interviewer for the {$job['title']} position at {$job['company_name']}. Let's begin. Can you briefly introduce yourself and tell me why you're interested in this role?";
-
-// Per-question time limit in seconds
-$questionTimeSec  = 120;
-// Overall interview limits (set by company, with safe defaults)
+$faceEnabled       = is_flag_enabled('FACE_VERIFY_ENABLED');
 $totalTimeLimitMin = max(5, (int)($job['interview_time_limit_min'] ?? 30));
-$maxQuestions      = max(1, (int)($job['interview_max_questions']  ?? 8));
+$maxQuestions      = max(1, (int)($job['interview_max_questions'] ?? 8));
+$firstQuestion     = "Welcome! I'm your AI interviewer for the {$job['title']} position at {$job['company_name']}. Let's begin. Please introduce yourself and tell me why you're excited about this role.";
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Interview — RecruitChain</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Interview — RecruitChain</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0;background:#0a0f1a;font-family:'Plus Jakarta Sans',sans-serif;overflow:hidden}
+  [x-cloak]{display:none!important}
+  #iv-root{width:100vw;height:100vh;display:flex;flex-direction:column}
+  .msg-ai{background:#1e293b;color:#e2e8f0;border-radius:0 12px 12px 12px}
+  .msg-user{background:#1E5FA8;color:#fff;border-radius:12px 0 12px 12px}
+
+  /* Fullscreen overlay */
+  #fs-prompt{position:fixed;inset:0;background:#0a0f1a;z-index:9999;display:flex;align-items:center;justify-content:center}
+
+  /* Violation flash */
+  @keyframes violationFlash{0%,100%{border-color:transparent}50%{border-color:#ef4444}}
+  .violation-flash{animation:violationFlash .4s ease 3}
+</style>
 </head>
-<body class="bg-white text-[#1A2332]">
-<div class="bg-[#1E5FA8] text-white px-6 py-3 flex items-center justify-between">
-    <h1 class="text-lg font-medium"><i class="fas fa-video mr-2"></i>AI Interview</h1>
-    <span class="text-sm text-blue-100"><?= htmlspecialchars($job['title']) ?> — <?= htmlspecialchars($job['company_name']) ?></span>
+<body class="bg-[#0a0f1a] text-white">
+
+<!-- ── Fullscreen prompt ──────────────────────────────────────────── -->
+<div id="fs-prompt">
+  <div class="text-center max-w-sm mx-4">
+    <div class="w-16 h-16 bg-[#1E5FA8] rounded-2xl flex items-center justify-center mx-auto mb-5">
+      <i class="fas fa-expand text-white text-2xl"></i>
+    </div>
+    <h2 class="text-xl font-bold mb-2">Full-Screen Required</h2>
+    <p class="text-slate-400 text-sm mb-6 leading-relaxed">
+      The interview must run in full-screen mode. Exiting full-screen, switching tabs, or leaving the window will be recorded as a violation.
+    </p>
+    <button id="fs-btn"
+            class="w-full bg-[#1E5FA8] hover:bg-[#154680] text-white font-semibold py-3 rounded-xl transition-colors">
+      <i class="fas fa-expand mr-2"></i>Enter Full-Screen &amp; Start Interview
+    </button>
+    <p class="text-slate-600 text-xs mt-3">You must remain in full-screen for the duration of the interview.</p>
+  </div>
 </div>
 
-<main class="max-w-4xl mx-auto px-4 py-6" x-data="interviewApp()" x-init="init()">
+<!-- ── Main interview UI ──────────────────────────────────────────── -->
+<div id="iv-root" x-data="interviewApp()" x-init="init()">
 
-    <!-- Blocking audio gate — hides everything until user enables audio -->
-    <div id="audio-gate" class="fixed inset-0 bg-white z-50 flex items-center justify-center">
-        <div class="text-center max-w-sm px-6">
-            <div class="w-16 h-16 bg-[#EBF3FC] rounded-full flex items-center justify-center mx-auto mb-4">
-                <i class="fas fa-microphone text-[#1E5FA8] text-2xl"></i>
+  <!-- Top bar -->
+  <div class="flex items-center gap-3 px-4 py-2.5 bg-[#0d1420] border-b border-slate-800 flex-shrink-0">
+    <div class="w-7 h-7 bg-[#1E5FA8] rounded-lg flex items-center justify-center">
+      <i class="fas fa-video text-white text-xs"></i>
+    </div>
+    <div>
+      <span class="text-white font-semibold text-sm"><?= htmlspecialchars($job['title']) ?></span>
+      <span class="text-slate-500 text-xs ml-2">— <?= htmlspecialchars($job['company_name']) ?></span>
+    </div>
+    <div class="ml-auto flex items-center gap-3">
+      <!-- Fullscreen status -->
+      <span id="fs-indicator" class="text-xs text-emerald-400 hidden"><i class="fas fa-expand mr-1"></i>Full-Screen</span>
+      <!-- Face status -->
+      <span id="face-badge" class="text-xs px-2 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700">
+        <i class="fas fa-circle-notch fa-spin mr-1"></i>Face
+      </span>
+      <!-- Violation count -->
+      <span x-show="violations.length > 0"
+            class="text-xs px-2 py-1 rounded-lg bg-red-500/10 text-red-400 border border-red-500/30">
+        <i class="fas fa-exclamation-triangle mr-1"></i>
+        <span x-text="violations.length"></span> violation<span x-text="violations.length===1?'':'s'"></span>
+      </span>
+      <!-- Q counter -->
+      <span class="text-xs text-slate-500">Q <span x-text="questionCount"></span>/<span x-text="MAX_QUESTIONS"></span></span>
+      <!-- Total time -->
+      <div class="flex items-center gap-1.5 bg-slate-800 border border-slate-700 px-3 py-1 rounded-lg">
+        <i class="fas fa-hourglass-half text-slate-400 text-xs"></i>
+        <span x-text="formatTime(totalTimeLeft)"
+              :class="totalTimeLeft<=120?'text-red-400 font-bold':'text-slate-300'"
+              class="font-mono text-sm tabular-nums"></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Violation banner -->
+  <div x-show="violationMsg" x-cloak
+       class="flex items-center gap-3 px-4 py-2.5 bg-red-500/10 border-b border-red-500/30 text-red-400 text-sm flex-shrink-0">
+    <i class="fas fa-exclamation-triangle flex-shrink-0"></i>
+    <span x-text="violationMsg"></span>
+    <button @click="violationMsg=''" class="ml-auto text-red-300 hover:text-white"><i class="fas fa-times"></i></button>
+  </div>
+
+  <!-- Main area -->
+  <div class="flex-1 flex gap-0 overflow-hidden">
+
+    <!-- Left: camera + proctoring panel -->
+    <div class="w-64 flex-shrink-0 flex flex-col gap-3 p-3 bg-[#0d1420] border-r border-slate-800">
+
+      <!-- Camera feed -->
+      <div class="relative bg-black rounded-xl overflow-hidden" style="height:160px">
+        <video id="webcam" autoplay muted playsinline class="w-full h-full object-cover"></video>
+        <canvas id="face-canvas" class="hidden"></canvas>
+        <div class="absolute bottom-2 left-2 right-2 flex items-center justify-between">
+          <span class="bg-black/70 text-xs text-white px-2 py-0.5 rounded-lg">
+            <span class="w-1.5 h-1.5 rounded-full bg-red-500 inline-block animate-pulse mr-1"></span>Live
+          </span>
+          <span x-show="micActive" class="bg-black/70 text-xs text-red-400 px-2 py-0.5 rounded-lg">
+            <i class="fas fa-microphone animate-pulse mr-1"></i>REC
+          </span>
+        </div>
+      </div>
+
+      <!-- Per-question timer -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs text-slate-500 font-medium"><i class="fas fa-clock mr-1"></i>This question</span>
+          <span x-text="formatTime(timeLeft)"
+                :class="timeLeft<=20?'text-red-400 font-bold animate-pulse':timeLeft<=60?'text-amber-400':'text-blue-400'"
+                class="text-sm font-mono tabular-nums"></span>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-1.5">
+          <div :style="`width:${Math.max(0,(timeLeft/QUESTION_TIME)*100)}%`"
+               :class="timeLeft<=20?'bg-red-500':timeLeft<=60?'bg-amber-500':'bg-blue-500'"
+               class="h-1.5 rounded-full transition-all duration-1000"></div>
+        </div>
+      </div>
+
+      <!-- Mic level -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3">
+        <div class="flex items-center justify-between mb-1.5">
+          <span class="text-xs text-slate-500 font-medium"><i class="fas fa-microphone mr-1"></i>Mic</span>
+          <button @click="toggleMic()"
+                  :class="micActive?'text-red-400 border-red-500/50':'text-blue-400 border-blue-500/50'"
+                  class="text-xs border px-2 py-0.5 rounded-lg transition-colors">
+            <span x-text="micActive?'Stop':'Speak'"></span>
+          </button>
+        </div>
+        <div class="w-full bg-slate-800 rounded-full h-1.5">
+          <div id="mic-level" class="h-1.5 rounded-full bg-emerald-500 transition-all duration-75" style="width:0%"></div>
+        </div>
+      </div>
+
+      <!-- Behavioral indicators -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2">
+        <p class="text-xs text-slate-500 font-medium uppercase tracking-wide mb-2"><i class="fas fa-brain mr-1"></i>Behavioral</p>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-400">Confidence</span>
+          <div class="w-20 bg-slate-800 rounded-full h-1.5">
+            <div :style="`width:${behavioral.confidence}%`" class="h-1.5 rounded-full bg-blue-400 transition-all duration-1000"></div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-400">Engagement</span>
+          <div class="w-20 bg-slate-800 rounded-full h-1.5">
+            <div :style="`width:${behavioral.engagement}%`" class="h-1.5 rounded-full bg-emerald-400 transition-all duration-1000"></div>
+          </div>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-400">Pace</span>
+          <span class="text-xs" :class="behavioral.pace==='good'?'text-emerald-400':behavioral.pace==='fast'?'text-amber-400':'text-slate-500'"
+                x-text="behavioral.pace || '—'"></span>
+        </div>
+        <div class="flex items-center justify-between">
+          <span class="text-xs text-slate-400">Eye contact</span>
+          <span class="text-xs" :class="behavioral.eyeContact==='good'?'text-emerald-400':'text-amber-400'"
+                x-text="behavioral.eyeContact || '—'"></span>
+        </div>
+      </div>
+
+      <!-- Speaking indicator -->
+      <div x-show="speaking" x-cloak
+           class="bg-blue-500/10 border border-blue-500/30 rounded-xl p-2.5 text-xs text-blue-400 text-center">
+        <i class="fas fa-volume-up mr-1 animate-pulse"></i>AI is speaking…
+        <button @click="stopSpeaking()" class="ml-2 text-red-400 hover:text-red-300 underline">Stop</button>
+      </div>
+    </div>
+
+    <!-- Right: chat area -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+
+      <!-- Messages -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-3" id="chat-area">
+        <template x-for="(msg, i) in messages" :key="i">
+          <div :class="msg.role==='ai'?'text-left':'text-right'">
+            <div x-show="msg.role==='ai'" class="text-xs text-slate-500 mb-1 flex items-center gap-1.5">
+              <i class="fas fa-robot text-blue-400"></i>AI Interviewer
+              <span x-text="'· Q' + msg.qNum" x-show="msg.qNum" class="text-slate-600"></span>
             </div>
-            <h2 class="text-lg font-semibold text-[#1A2332] mb-2">Enable Audio & Microphone</h2>
-            <p class="text-sm text-[#4A6380] mb-6">
-                This interview uses your microphone for voice answers and audio for the AI interviewer.
-                Click below to grant access and begin — your timer starts only after you do.
-            </p>
-            <button onclick="enableAudioAndStart()"
-                    class="bg-[#1E5FA8] text-white px-6 py-3 rounded-lg text-sm font-semibold hover:bg-[#154680] w-full flex items-center justify-center gap-2">
-                <i class="fas fa-volume-up"></i> Enable Audio &amp; Start Interview
+            <div :class="msg.role==='ai'?'msg-ai':'msg-user'"
+                 class="inline-block px-4 py-2.5 text-sm max-w-xl leading-relaxed">
+              <span x-text="msg.text"></span>
+              <button x-show="msg.role==='ai'" @click="speakMessage(msg.text)"
+                      class="ml-2 opacity-40 hover:opacity-100 text-blue-400 align-middle" title="Replay">
+                <i class="fas fa-volume-up text-xs"></i>
+              </button>
+            </div>
+            <div class="text-xs text-slate-600 mt-1 px-1" x-text="msg.time"></div>
+          </div>
+        </template>
+        <div x-show="loading" class="text-slate-500 text-sm text-center py-3 flex items-center justify-center gap-2">
+          <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:0ms"></div>
+          <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:150ms"></div>
+          <div class="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style="animation-delay:300ms"></div>
+        </div>
+      </div>
+
+      <!-- Input area -->
+      <div class="p-3 border-t border-slate-800 bg-[#0d1420] flex-shrink-0">
+        <div class="flex gap-2 mb-2">
+          <div class="flex-1">
+            <textarea x-model="userInput" rows="2"
+                      @keydown.ctrl.enter="sendAnswer()"
+                      :disabled="loading || speaking"
+                      class="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-xl px-4 py-2.5 text-sm text-white placeholder-slate-600 focus:outline-none resize-none disabled:opacity-40 transition-colors"
+                      placeholder="Type your answer… or click Speak. Ctrl+Enter to send."></textarea>
+            <div x-show="interimText" x-cloak
+                 class="mt-1 text-xs text-slate-400 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 italic">
+              <i class="fas fa-microphone text-red-400 mr-1 animate-pulse"></i><span x-text="interimText"></span>
+            </div>
+          </div>
+          <div class="flex flex-col gap-2">
+            <button @click="sendAnswer()"
+                    :disabled="loading || speaking || !(userInput.trim()||interimText.trim())"
+                    class="bg-[#1E5FA8] hover:bg-[#154680] text-white px-4 py-2.5 rounded-xl text-sm font-medium disabled:opacity-40 transition-colors"
+                    title="Send (Ctrl+Enter)">
+              <i class="fas fa-paper-plane"></i>
             </button>
-            <p class="text-xs text-[#4A6380] mt-3">Your browser may ask for microphone permission — please click Allow.</p>
+            <button @click="toggleMic()"
+                    :class="micActive?'bg-red-600 hover:bg-red-700':'bg-slate-700 hover:bg-slate-600'"
+                    class="text-white px-4 py-2.5 rounded-xl text-sm transition-colors"
+                    title="Toggle voice input">
+              <i :class="micActive?'fas fa-microphone-slash':'fas fa-microphone'"></i>
+            </button>
+            <button @click="endInterview()"
+                    :disabled="loading"
+                    class="bg-slate-800 hover:bg-slate-700 text-red-400 px-4 py-2.5 rounded-xl text-sm disabled:opacity-40 transition-colors"
+                    title="End interview">
+              <i class="fas fa-stop"></i>
+            </button>
+          </div>
         </div>
-    </div>
-
-    <!-- Face mismatch alert -->
-    <div x-show="faceAlert" x-cloak
-         class="bg-[#FDECEA] border border-[#C0392B] rounded p-3 mb-4 text-sm text-[#C0392B] flex items-center gap-2">
-        <i class="fas fa-exclamation-triangle"></i>
-        <span x-text="faceAlertMsg"></span>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-        <!-- Left column: video + status -->
-        <div class="col-span-1 flex flex-col gap-2">
-            <div class="bg-black rounded overflow-hidden border border-[#C5D8EE] relative">
-                <video id="webcam" autoplay muted playsinline class="w-full aspect-video"></video>
-                <!-- Face status overlay -->
-                <div id="face-badge"
-                     class="absolute top-2 right-2 text-xs px-2 py-0.5 rounded font-medium bg-[#E8F5EE] text-[#1A7A4A] border border-[#1A7A4A]">
-                    <i class="fas fa-circle-notch fa-spin mr-1"></i>Initialising
-                </div>
-            </div>
-
-            <!-- Camera / mic status row -->
-            <div class="flex items-center gap-3 text-xs text-[#4A6380]">
-                <span id="cam-status"><i class="fas fa-circle text-[#C5D8EE]"></i> Camera</span>
-                <span id="mic-status"><i class="fas fa-circle text-[#C5D8EE]"></i> Mic</span>
-                <button @click="toggleMic()" :title="micActive ? 'Stop recording' : 'Start voice input'"
-                        :class="micActive ? 'text-[#C0392B]' : 'text-[#1E5FA8]'"
-                        class="ml-auto border border-[#C5D8EE] rounded px-2 py-1 hover:bg-[#EBF3FC]">
-                    <i :class="micActive ? 'fas fa-microphone-slash' : 'fas fa-microphone'"></i>
-                    <span x-text="micActive ? 'Stop' : 'Voice'"></span>
-                </button>
-            </div>
-
-            <!-- Recording indicator -->
-            <div x-show="micActive"
-                 class="bg-[#FDECEA] border border-[#C5D8EE] rounded p-2 text-xs text-[#C0392B] text-center">
-                <i class="fas fa-circle animate-pulse mr-1"></i>Recording… speak your answer
-            </div>
-
-            <!-- TTS speaking indicator -->
-            <div x-show="speaking" x-cloak
-                 class="bg-[#EBF3FC] border border-[#C5D8EE] rounded p-2 text-xs text-[#1E5FA8] text-center">
-                <i class="fas fa-volume-up mr-1"></i>AI is speaking…
-                <button @click="stopSpeaking()" class="ml-2 text-[#C0392B] underline">Stop</button>
-            </div>
-
-            <!-- Per-question countdown -->
-            <div class="border border-[#C5D8EE] rounded p-3">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs text-[#4A6380] font-medium">
-                        <i class="fas fa-clock mr-1"></i>This question
-                    </span>
-                    <span x-text="formatTime(timeLeft)"
-                          :class="timeLeft <= 20 ? 'text-[#C0392B] font-bold' : 'text-[#1E5FA8] font-medium'"
-                          class="text-sm tabular-nums"></span>
-                </div>
-                <div class="w-full bg-[#EBF3FC] rounded h-2 overflow-hidden">
-                    <div :style="`width:${(timeLeft / QUESTION_TIME) * 100}%`"
-                         :class="timeLeft <= 20 ? 'bg-[#C0392B]' : timeLeft <= 60 ? 'bg-[#B05C00]' : 'bg-[#1E5FA8]'"
-                         class="h-2 rounded transition-all duration-1000"></div>
-                </div>
-            </div>
-
-            <!-- Overall interview countdown -->
-            <div class="border border-[#C5D8EE] rounded p-3">
-                <div class="flex items-center justify-between mb-1">
-                    <span class="text-xs text-[#4A6380] font-medium">
-                        <i class="fas fa-hourglass-half mr-1"></i>Interview total
-                    </span>
-                    <span x-text="formatTime(totalTimeLeft)"
-                          :class="totalTimeLeft <= 60 ? 'text-[#C0392B] font-bold' : 'text-[#4A6380]'"
-                          class="text-sm tabular-nums"></span>
-                </div>
-                <div class="w-full bg-[#EBF3FC] rounded h-1.5 overflow-hidden">
-                    <div :style="`width:${(totalTimeLeft / TOTAL_TIME_SEC) * 100}%`"
-                         :class="totalTimeLeft <= 60 ? 'bg-[#C0392B]' : 'bg-[#4A6380]'"
-                         class="h-1.5 rounded transition-all duration-1000"></div>
-                </div>
-                <p class="text-xs text-[#4A6380] mt-1">
-                    Q <span x-text="questionCount"></span> of <span x-text="MAX_QUESTIONS"></span> max
-                </p>
-            </div>
+        <div class="flex items-center gap-4 text-xs text-slate-600">
+          <span>Q<span x-text="questionCount"></span> of ~<span x-text="MAX_QUESTIONS"></span></span>
+          <span x-show="violations.length>0" class="text-red-400">
+            <i class="fas fa-exclamation-triangle mr-1"></i><span x-text="violations.length"></span> violation<span x-text="violations.length===1?'':'s'"></span>
+          </span>
+          <span class="ml-auto" :class="faceOk?'text-emerald-400':'text-red-400'" x-text="faceStatusText"></span>
         </div>
-
-        <!-- Right column: chat -->
-        <div class="col-span-2 flex flex-col" style="height:560px;">
-            <div class="flex-1 bg-white border border-[#C5D8EE] rounded p-4 overflow-y-auto mb-3" id="chat-area">
-                <template x-for="(msg, i) in messages" :key="i">
-                    <div class="mb-3" :class="msg.role === 'ai' ? 'text-left' : 'text-right'">
-                        <div :class="msg.role === 'ai'
-                                ? 'bg-[#EBF3FC] text-[#1A2332] rounded-br-lg rounded-bl-lg rounded-tr-lg'
-                                : 'bg-[#1E5FA8] text-white rounded-bl-lg rounded-tl-lg rounded-br-lg'"
-                             class="inline-block p-3 text-sm max-w-md">
-                            <div x-show="msg.role === 'ai'" class="text-xs text-[#4A6380] mb-1 font-medium">
-                                <i class="fas fa-robot mr-1"></i>AI Interviewer
-                            </div>
-                            <span x-text="msg.text"></span>
-                            <button x-show="msg.role === 'ai'" @click="speak(msg.text)"
-                                    class="ml-2 text-[#1E5FA8] opacity-60 hover:opacity-100" title="Replay audio">
-                                <i class="fas fa-volume-up text-xs"></i>
-                            </button>
-                        </div>
-                        <!-- Timestamp on each message -->
-                        <div class="text-[10px] text-[#4A6380] mt-0.5 px-1" x-text="msg.time"></div>
-                    </div>
-                </template>
-                <div x-show="loading" class="text-[#4A6380] text-sm text-center py-2">
-                    <i class="fas fa-spinner fa-spin mr-1"></i>AI is thinking…
-                </div>
-            </div>
-
-            <!-- Input area -->
-            <div>
-                <div class="flex gap-2 mb-2">
-                    <div class="flex-1 flex flex-col gap-1">
-                        <textarea x-model="userInput" rows="2"
-                                  @keydown.ctrl.enter="sendAnswer()"
-                                  :disabled="loading"
-                                  class="w-full border border-[#C5D8EE] rounded px-3 py-2 text-sm focus:outline-none focus:border-[#1E5FA8] resize-none disabled:opacity-50"
-                                  placeholder="Type your answer (or use Voice) — Ctrl+Enter to send"
-                                  id="interview-input"></textarea>
-                        <!-- Live interim speech preview -->
-                        <div x-show="interimText" x-cloak
-                             class="text-xs text-[#4A6380] bg-[#EBF3FC] border border-[#C5D8EE] rounded px-2 py-1 italic">
-                            <i class="fas fa-microphone text-[#1E5FA8] mr-1"></i><span x-text="interimText"></span>
-                        </div>
-                    </div>
-                    <div class="flex flex-col gap-2">
-                        <button @click="sendAnswer()"
-                                :disabled="loading || !(userInput.trim() || interimText.trim())"
-                                class="bg-[#1E5FA8] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#154680] disabled:opacity-50"
-                                title="Send answer (Ctrl+Enter)">
-                            <i class="fas fa-paper-plane"></i>
-                        </button>
-                        <button @click="endInterview()" :disabled="loading"
-                                class="bg-[#C0392B] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#A93226] disabled:opacity-50"
-                                title="End interview">
-                            <i class="fas fa-stop"></i>
-                        </button>
-                    </div>
-                </div>
-                <p class="text-xs text-[#4A6380]">
-                    Question <span x-text="questionCount"></span> of ~8
-                    &nbsp;|&nbsp; Ctrl+Enter to send
-                    &nbsp;|&nbsp; <span x-text="faceStatusText"
-                                        :class="faceOk ? 'text-[#1A7A4A]' : 'text-[#C0392B]'"></span>
-                </p>
-            </div>
-        </div>
+      </div>
     </div>
-</main>
+  </div>
+</div><!-- end iv-root -->
 
 <script>
-const IV_SESSION_ID  = <?= $ivSessionId ?>;
-const IV_JOB_ID      = <?= $jobId ?>;
-const FIRST_QUESTION = <?= json_encode($firstQuestion) ?>;
-const QUESTION_TIME  = <?= $questionTimeSec ?>;   // seconds per question
-const TOTAL_TIME_SEC = <?= $totalTimeLimitMin * 60 ?>;  // overall interview time limit
-const MAX_QUESTIONS  = <?= $maxQuestions ?>;            // max Q&A exchanges
-const WS_URL         = <?= json_encode($wsUrl) ?>;
-const FACE_ENABLED   = <?= $faceEnabled ? 'true' : 'false' ?>;
+const IV_SESSION_ID      = <?= $ivSessionId ?>;
+const IV_JOB_ID          = <?= $jobId ?>;
+const FIRST_QUESTION     = <?= json_encode($firstQuestion) ?>;
+const QUESTION_TIME      = 120;
+const TOTAL_TIME_SEC     = <?= $totalTimeLimitMin * 60 ?>;
+const MAX_QUESTIONS      = <?= $maxQuestions ?>;
+const FACE_ENABLED       = <?= $faceEnabled ? 'true' : 'false' ?>;
 const STORED_DESCRIPTORS = <?= json_encode($storedDescriptor) ?>;
 
-// ── Audio gate ───────────────────────────────────────────────────────────────
-let ttsEnabled = false;
-let _appRef    = null;   // set by init() so gate can call startTimer + speak
+// ── Fullscreen management ────────────────────────────────────────────────────
+let _appRef = null;
 
-function enableAudioAndStart() {
-    ttsEnabled = true;
-    document.getElementById('audio-gate').remove();
-    if (_appRef) {
-        _appRef.resetTimer();        // per-question timer starts NOW
-        _appRef.startTotalTimer();   // overall interview timer starts NOW
-        _appRef.speakMessage(FIRST_QUESTION);
+document.getElementById('fs-btn').addEventListener('click', async () => {
+    try {
+        await document.documentElement.requestFullscreen();
+    } catch(e) {
+        // Browser may deny — proceed anyway
+        enterInterview();
     }
+});
+
+document.addEventListener('fullscreenchange', () => {
+    if (document.fullscreenElement) {
+        document.getElementById('fs-prompt').style.display = 'none';
+        document.getElementById('fs-indicator').classList.remove('hidden');
+        if (_appRef) _appRef.onFullscreenEntered();
+    } else {
+        document.getElementById('fs-indicator').classList.add('hidden');
+        // Exiting fullscreen mid-interview is a violation
+        if (_appRef && _appRef._interviewStarted) {
+            _appRef.logViolation('FULLSCREEN_EXIT', 'Candidate exited full-screen mode', 'Tab/window focus lost or manually exited');
+            _appRef.violationMsg = '⚠ Full-screen mode exited. This has been recorded as a violation. Please re-enter full-screen.';
+            // Offer to re-enter
+            setTimeout(() => {
+                document.getElementById('fs-prompt').style.display = 'flex';
+            }, 3000);
+        }
+    }
+});
+
+// Tab/window visibility violations
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden && _appRef && _appRef._interviewStarted) {
+        _appRef.logViolation('TAB_SWITCH', 'Candidate switched tab or minimised window', 'document became hidden');
+        _appRef.violationMsg = '⚠ Tab switch detected. This has been recorded as a violation.';
+    }
+});
+
+window.addEventListener('blur', () => {
+    if (_appRef && _appRef._interviewStarted) {
+        _appRef.logViolation('WINDOW_BLUR', 'Interview window lost focus', 'window.onblur fired');
+    }
+});
+
+function enterInterview() {
+    document.getElementById('fs-prompt').style.display = 'none';
+    if (_appRef) _appRef.onFullscreenEntered();
 }
 
 // ── TTS ─────────────────────────────────────────────────────────────────────
+let ttsEnabled = false;
 function getVoice() {
     const voices = window.speechSynthesis.getVoices();
     return voices.find(v => /en.*(GB|AU|US)/i.test(v.lang) && /female|zira|hazel|karen|samantha/i.test(v.name))
-        || voices.find(v => /en/i.test(v.lang))
-        || null;
+        || voices.find(v => /en/i.test(v.lang)) || null;
 }
-
 function speak(text, onEnd) {
     if (!window.speechSynthesis) { if (onEnd) onEnd(); return; }
     window.speechSynthesis.cancel();
@@ -273,56 +362,27 @@ function speak(text, onEnd) {
         const u = new SpeechSynthesisUtterance(text);
         u.rate = 0.95; u.pitch = 1.0; u.volume = 1.0;
         const v = getVoice(); if (v) u.voice = v;
-        u.onend   = () => { if (onEnd) onEnd(); };
+        u.onend = () => { if (onEnd) onEnd(); };
         u.onerror = () => { if (onEnd) onEnd(); };
         window.speechSynthesis.speak(u);
     };
-    // Voices may not be loaded yet on first call
     if (window.speechSynthesis.getVoices().length === 0) {
         window.speechSynthesis.addEventListener('voiceschanged', trySpeak, { once: true });
-    } else {
-        trySpeak();
-    }
+    } else { trySpeak(); }
 }
 
-// ── Face verification helpers ────────────────────────────────────────────────
+// ── Face helpers ─────────────────────────────────────────────────────────────
 function euclidean(a, b) {
-    let sum = 0;
-    for (let i = 0; i < a.length; i++) sum += (a[i] - b[i]) ** 2;
-    return Math.sqrt(sum);
+    let s = 0; for (let i = 0; i < a.length; i++) s += (a[i]-b[i])**2; return Math.sqrt(s);
 }
-
-function bestMatch(liveDescriptor) {
-    // STORED_DESCRIPTORS is array of arrays (up to 5 registered angles)
-    if (!STORED_DESCRIPTORS || STORED_DESCRIPTORS.length === 0) return 1.0;
+function bestMatch(live) {
+    if (!STORED_DESCRIPTORS || !STORED_DESCRIPTORS.length) return 1.0;
     let best = Infinity;
-    for (const stored of STORED_DESCRIPTORS) {
-        const flat = Array.isArray(stored[0]) ? stored : [stored]; // handle nested
-        for (const desc of flat) {
-            const d = euclidean(liveDescriptor, desc);
-            if (d < best) best = d;
-        }
+    for (const s of STORED_DESCRIPTORS) {
+        const flat = Array.isArray(s[0]) ? s : [s];
+        for (const d of flat) { const dist = euclidean(live, d); if (dist < best) best = dist; }
     }
     return best;
-}
-
-// ── Anti-cheat WebSocket ─────────────────────────────────────────────────────
-let acWs = null;
-function acConnect() {
-    try {
-        acWs = new WebSocket(`${WS_URL}/session/${IV_SESSION_ID}`);
-        acWs.onmessage = (e) => {
-            const d = JSON.parse(e.data);
-            if (d.action === 'TERMINATE') {
-                alert('Interview session terminated due to integrity violation.');
-                window.location.href = '/dashboard.php?terminated=1';
-            }
-        };
-        acWs.onclose = () => { setTimeout(acConnect, 5000); }; // reconnect
-    } catch (_) {}
-}
-function acSend(obj) {
-    if (acWs && acWs.readyState === WebSocket.OPEN) acWs.send(JSON.stringify(obj));
 }
 
 // ── Alpine app ───────────────────────────────────────────────────────────────
@@ -336,45 +396,67 @@ function interviewApp() {
         micActive:     false,
         speaking:      false,
         recognition:   null,
-        faceAlert:     false,
-        faceAlertMsg:  '',
+        violationMsg:  '',
+        violations:    [],   // [{type,msg,reason,ts}]
         faceOk:        true,
         faceStatusText:'Face: initialising',
 
-        // Per-question timer
-        timeLeft:       QUESTION_TIME,
-        _timerHandle:   null,
-        // Overall interview timer
-        totalTimeLeft:  TOTAL_TIME_SEC,
-        _totalHandle:   null,
+        timeLeft:      QUESTION_TIME,
+        totalTimeLeft: TOTAL_TIME_SEC,
+        _timerHandle:  null,
+        _totalHandle:  null,
+        _interviewStarted: false,
+
+        // Behavioral analytics
+        behavioral: {
+            confidence: 50, engagement: 60,
+            pace: null, eyeContact: null,
+            hesitationCount: 0, avgResponseSec: 0,
+            responseStartTs: null,
+        },
+        _responseTimes: [],
+        _micAnalyser: null,
+        _micRaf: null,
 
         init() {
             _appRef = this;
             this.startCamera();
-            this.pushMsg('ai', FIRST_QUESTION);
-            // Timers and TTS start only after user clicks "Enable Audio & Start"
-            acConnect();
+            // Initial message shown without timers — starts when fullscreen entered
+            this.pushMsg('ai', FIRST_QUESTION, 1);
+        },
+
+        onFullscreenEntered() {
+            if (this._interviewStarted) return;
+            this._interviewStarted = true;
+            ttsEnabled = true;
+            this.speakMessage(FIRST_QUESTION);
+            this.resetTimer();
+            this.startTotalTimer();
+            this.behavioral.responseStartTs = Date.now();
         },
 
         // ── helpers ──────────────────────────────────────────────────────────
-        nowTime() {
-            return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        nowTime() { return new Date().toLocaleTimeString([], { hour:'2-digit', minute:'2-digit' }); },
+        formatTime(s) { return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`; },
+
+        pushMsg(role, text, qNum = null) {
+            this.messages.push({ role, text, time: this.nowTime(), qNum });
+            this.$nextTick(() => {
+                const el = document.getElementById('chat-area');
+                if (el) el.scrollTop = el.scrollHeight;
+            });
         },
 
-        pushMsg(role, text) {
-            this.messages.push({ role, text, time: this.nowTime() });
-            this.$nextTick(() => this.scrollChat());
-        },
-
-        formatTime(s) {
-            const m = Math.floor(s / 60);
-            const sec = s % 60;
-            return `${m}:${String(sec).padStart(2, '0')}`;
-        },
-
-        scrollChat() {
-            const el = document.getElementById('chat-area');
-            if (el) el.scrollTop = el.scrollHeight;
+        // ── violation log ─────────────────────────────────────────────────────
+        logViolation(type, msg, reason = '') {
+            this.violations.push({ type, msg, reason, ts: new Date().toISOString() });
+            // Save incrementally
+            fetch('/api/interview-answer.php', {
+                method: 'POST', credentials: 'same-origin',
+                headers: {'Content-Type':'application/json'},
+                body: JSON.stringify({ sessionId: IV_SESSION_ID, jobId: IV_JOB_ID,
+                    action: 'log_violation', violation: { type, msg, reason } }),
+            }).catch(() => {});
         },
 
         // ── timers ────────────────────────────────────────────────────────────
@@ -385,22 +467,19 @@ function interviewApp() {
                 if (this.loading || this.speaking) return;
                 this.timeLeft--;
                 if (this.timeLeft <= 0) {
-                    clearInterval(this._timerHandle);
-                    this._timerHandle = null;
+                    clearInterval(this._timerHandle); this._timerHandle = null;
                     this.onTimerExpired();
                 }
             }, 1000);
         },
 
         startTotalTimer() {
-            if (this._totalHandle) return; // already running
+            if (this._totalHandle) return;
             this._totalHandle = setInterval(() => {
                 this.totalTimeLeft--;
                 if (this.totalTimeLeft <= 0) {
-                    clearInterval(this._totalHandle);
-                    clearInterval(this._timerHandle);
-                    this._totalHandle = null;
-                    this._timerHandle = null;
+                    clearInterval(this._totalHandle); clearInterval(this._timerHandle);
+                    this._totalHandle = null; this._timerHandle = null;
                     this.pushMsg('ai', 'The interview time limit has been reached. Ending now.');
                     this.endInterview(true);
                 }
@@ -408,11 +487,11 @@ function interviewApp() {
         },
 
         onTimerExpired() {
-            const answer = (this.userInput + this.interimText).trim() || '[No answer — time expired]';
-            this.pushMsg('ai', 'Time is up for this question. Moving on.');
-            this.userInput = '';
-            this.interimText = '';
-            this.sendAnswerText(answer);
+            const ans = (this.userInput + this.interimText).trim() || '[No answer — time expired]';
+            this.behavioral.hesitationCount++;
+            this.pushMsg('ai', '⏱ Time is up for this question. Moving on.');
+            this.userInput = ''; this.interimText = '';
+            this.sendAnswerText(ans);
         },
 
         // ── camera ────────────────────────────────────────────────────────────
@@ -421,24 +500,39 @@ function interviewApp() {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
                 const vid = document.getElementById('webcam');
                 vid.srcObject = stream;
-                document.getElementById('cam-status').innerHTML = '<i class="fas fa-circle text-[#1A7A4A]"></i> Camera';
-                document.getElementById('mic-status').innerHTML = '<i class="fas fa-circle text-[#1A7A4A]"></i> Mic';
+                this.startMicMeter(stream);
                 if (FACE_ENABLED) this.startFaceMonitor(vid);
             } catch(e) {
-                document.getElementById('cam-status').innerHTML = '<i class="fas fa-circle text-[#C0392B]"></i> No Camera';
+                this.faceStatusText = 'Camera error';
             }
         },
 
-        // ── face monitor ──────────────────────────────────────────────────────
+        startMicMeter(stream) {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const src = ctx.createMediaStreamSource(stream);
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 256;
+            src.connect(analyser);
+            this._micAnalyser = analyser;
+            const buf = new Uint8Array(analyser.frequencyBinCount);
+            const bar = document.getElementById('mic-level');
+            const tick = () => {
+                analyser.getByteFrequencyData(buf);
+                const avg = buf.reduce((a,b)=>a+b,0)/buf.length;
+                if (bar) bar.style.width = Math.min(100, avg * 3) + '%';
+                this._micRaf = requestAnimationFrame(tick);
+            };
+            tick();
+        },
+
+        // ── face monitor ─────────────────────────────────────────────────────
         _faceModelsLoaded: false,
-        _faceAbsent: 0,   // consecutive scans with no face
-        _gazeOff:   0,   // consecutive off-gaze scans
+        _faceAbsent: 0,
+        _gazeOffCount: 0,
+        _faceCheckCanvas: null,
 
         async startFaceMonitor(videoEl) {
-            if (typeof faceapi === 'undefined') {
-                this.setFaceBadge(null, 'No face-api');
-                return;
-            }
+            if (typeof faceapi === 'undefined') return;
             try {
                 await Promise.all([
                     faceapi.nets.ssdMobilenetv1.loadFromUri('/assets/models'),
@@ -446,107 +540,96 @@ function interviewApp() {
                     faceapi.nets.faceRecognitionNet.loadFromUri('/assets/models'),
                 ]);
                 this._faceModelsLoaded = true;
-                this.setFaceBadge('ok', 'Face: verified');
-            } catch(e) {
-                this.setFaceBadge(null, 'Models missing');
-                return;
-            }
+            } catch(e) { return; }
+
             const scan = async () => {
                 await this.doFaceScan(videoEl);
-                // Random 7–10 s interval
-                setTimeout(scan, 7000 + Math.random() * 3000);
+                setTimeout(scan, 8000 + Math.random() * 2000);
             };
-            setTimeout(scan, 3000); // first scan after 3s
+            setTimeout(scan, 3000);
         },
 
         async doFaceScan(videoEl) {
             if (!this._faceModelsLoaded || videoEl.paused || videoEl.readyState < 2) return;
             try {
-                const detections = await faceapi
+                const dets = await faceapi
                     .detectAllFaces(videoEl, new faceapi.SsdMobilenetv1Options({ minConfidence: 0.5 }))
                     .withFaceLandmarks()
                     .withFaceDescriptors();
 
-                if (detections.length === 0) {
+                if (dets.length === 0) {
                     this._faceAbsent++;
                     if (this._faceAbsent >= 2) {
-                        this.setFaceBadge('warn', 'Face: not detected');
-                        acSend({ type: 'event', event: 'FACE_MISSING_30S', timestamp: new Date().toISOString() });
-                        this.showFaceAlert('No face detected. Please remain visible to the camera.');
+                        this.setFaceBadge('warn', 'Face: absent');
+                        if (this._faceAbsent === 2) {
+                            this.logViolation('FACE_NOT_DETECTED', 'Candidate not visible for extended period', 'No face detected in 2 consecutive scans');
+                            this.violationMsg = '⚠ Your face is not visible. Please remain in front of the camera.';
+                        }
+                        // Update behavioral
+                        this.behavioral.engagement = Math.max(10, this.behavioral.engagement - 5);
                     }
                     return;
                 }
+
                 this._faceAbsent = 0;
 
-                if (detections.length > 1) {
+                if (dets.length > 1) {
                     this.setFaceBadge('fail', 'Multiple faces');
-                    acSend({ type: 'event', event: 'MULTIPLE_FACES', timestamp: new Date().toISOString() });
-                    this.showFaceAlert('Multiple faces detected. Only the candidate should be visible.');
+                    this.logViolation('MULTIPLE_FACES', 'Multiple faces detected in interview', 'More than one face visible');
+                    this.violationMsg = '⚠ Multiple faces detected. Only the candidate should be visible.';
                     return;
                 }
 
-                // Single face — compare with stored descriptor
-                const live = Array.from(detections[0].descriptor);
+                const live = Array.from(dets[0].descriptor);
                 const dist = bestMatch(live);
                 const matched = dist < 0.45;
-                acSend({ type: 'face_scan', face_count: 1, match_score: dist, gaze: this.estimateGaze(detections[0]) });
 
-                if (!matched) {
-                    this.setFaceBadge('fail', 'Face: mismatch');
-                    acSend({ type: 'event', event: 'FACE_MISMATCH', timestamp: new Date().toISOString() });
-                    this.showFaceAlert('Face mismatch detected. Are you the registered candidate?');
-                } else {
-                    this._faceAbsent = 0;
-                    this.hideFaceAlert();
-                    const gaze = this.estimateGaze(detections[0]);
-                    if (gaze === 'OFF_CENTER') {
-                        this._gazeOff++;
-                        if (this._gazeOff >= 3) {
-                            acSend({ type: 'event', event: 'GAZE_OFF_CAMERA_3X', timestamp: new Date().toISOString() });
-                            this._gazeOff = 0;
-                        }
-                        this.setFaceBadge('warn', 'Face: look at screen');
-                    } else {
-                        this._gazeOff = 0;
-                        this.setFaceBadge('ok', 'Face: verified');
-                    }
+                if (!matched && STORED_DESCRIPTORS.length > 0) {
+                    this.setFaceBadge('fail', 'Face mismatch');
+                    this.logViolation('FACE_MISMATCH', 'Face verification failed', `Distance: ${dist.toFixed(3)}`);
+                    this.violationMsg = '⚠ Face mismatch detected. Identity could not be verified.';
+                    this.behavioral.confidence = Math.max(10, this.behavioral.confidence - 10);
+                    return;
                 }
-            } catch(e) { /* skip failed scan */ }
+
+                // Gaze estimation from landmarks
+                const gaze = this.estimateGaze(dets[0]);
+                this.behavioral.eyeContact = gaze === 'STRAIGHT' ? 'good' : 'off';
+                if (gaze === 'OFF_CENTER') {
+                    this._gazeOffCount++;
+                    if (this._gazeOffCount >= 3) {
+                        this.logViolation('GAZE_OFF_CAMERA', 'Candidate repeatedly looking away from screen', 'Nose-eye offset > threshold');
+                        this._gazeOffCount = 0;
+                        this.behavioral.engagement = Math.max(20, this.behavioral.engagement - 8);
+                    }
+                    this.setFaceBadge('warn', 'Look at screen');
+                } else {
+                    this._gazeOffCount = 0;
+                    this.setFaceBadge('ok', 'Face: verified');
+                    this.behavioral.engagement = Math.min(100, this.behavioral.engagement + 2);
+                    this.behavioral.confidence = Math.min(100, this.behavioral.confidence + 1);
+                }
+            } catch(e) { /* skip bad frame */ }
         },
 
-        estimateGaze(detection) {
+        estimateGaze(det) {
             try {
-                const lm    = detection.landmarks;
-                const nose  = lm.getNose();
-                const lEye  = lm.getLeftEye();
-                const rEye  = lm.getRightEye();
+                const lm = det.landmarks;
+                const nose = lm.getNose(); const lEye = lm.getLeftEye(); const rEye = lm.getRightEye();
                 const eyeCX = (lEye[0].x + rEye[3].x) / 2;
-                const noseX = nose[3].x;
-                return Math.abs(noseX - eyeCX) > 22 ? 'OFF_CENTER' : 'STRAIGHT';
+                return Math.abs(nose[3].x - eyeCX) > 22 ? 'OFF_CENTER' : 'STRAIGHT';
             } catch(_) { return 'STRAIGHT'; }
         },
 
         setFaceBadge(state, label) {
             const badge = document.getElementById('face-badge');
             if (!badge) return;
-            const classes = {
-                ok:   'bg-[#E8F5EE] text-[#1A7A4A] border-[#1A7A4A]',
-                warn: 'bg-[#FFF3E6] text-[#B05C00] border-[#B05C00]',
-                fail: 'bg-[#FDECEA] text-[#C0392B] border-[#C0392B]',
-            };
-            badge.className = `absolute top-2 right-2 text-xs px-2 py-0.5 rounded font-medium border ${classes[state] ?? classes.warn}`;
-            const icon = state === 'ok' ? 'fa-check-circle' : state === 'fail' ? 'fa-times-circle' : 'fa-exclamation-circle';
-            badge.innerHTML = `<i class="fas ${icon} mr-1"></i>${label}`;
-            this.faceOk         = state === 'ok';
+            const cls = { ok:'bg-emerald-500/10 text-emerald-400 border-emerald-500/30', warn:'bg-amber-500/10 text-amber-400 border-amber-500/30', fail:'bg-red-500/10 text-red-400 border-red-500/30' };
+            const icon = { ok:'fa-check-circle', warn:'fa-exclamation-circle', fail:'fa-times-circle' };
+            badge.className = `text-xs px-2 py-1 rounded-lg border ${cls[state]||cls.warn}`;
+            badge.innerHTML = `<i class="fas ${icon[state]||icon.warn} mr-1"></i>${label}`;
+            this.faceOk = state === 'ok';
             this.faceStatusText = label;
-        },
-
-        showFaceAlert(msg) {
-            this.faceAlert    = true;
-            this.faceAlertMsg = msg;
-        },
-        hideFaceAlert() {
-            this.faceAlert = false;
         },
 
         // ── mic ───────────────────────────────────────────────────────────────
@@ -557,128 +640,109 @@ function interviewApp() {
             if (!SR) { alert('Speech recognition not supported. Please type your answer.'); return; }
             if (this.micActive) return;
             this.stopSpeaking();
-
             const self = this;
-            const rec  = new SR();
-            rec.continuous     = true;
-            rec.interimResults = true;
-            rec.lang           = 'en-US';
-
+            const rec = new SR();
+            rec.continuous = true; rec.interimResults = true; rec.lang = 'en-US';
             let finalText = '';
-
             rec.onresult = (e) => {
                 let interim = '';
                 for (let i = e.resultIndex; i < e.results.length; i++) {
-                    if (e.results[i].isFinal) {
-                        finalText += e.results[i][0].transcript + ' ';
-                    } else {
-                        interim += e.results[i][0].transcript;
-                    }
+                    if (e.results[i].isFinal) finalText += e.results[i][0].transcript + ' ';
+                    else interim += e.results[i][0].transcript;
                 }
-                self.userInput   = finalText;
-                self.interimText = interim;
+                self.userInput = finalText; self.interimText = interim;
+                // Update behavioral pace from word count
+                const words = (finalText + interim).trim().split(/\s+/).length;
+                if (words > 50) self.behavioral.pace = 'good';
+                else if (words > 20) self.behavioral.pace = 'developing';
             };
-
-            rec.onerror = (e) => {
-                if (e.error === 'not-allowed') {
-                    alert('Microphone access denied. Please allow microphone permission and try again.');
-                    self.micActive   = false;
-                    self.recognition = null;
-                } else if (e.error === 'aborted') {
-                    // intentional stop — ignore
-                } else if (e.error !== 'no-speech') {
-                    console.warn('Speech recognition error:', e.error);
-                }
-            };
-
-            rec.onend = () => {
-                // Auto-restart while mic is active and AI is not speaking
-                if (self.micActive && !self.speaking) {
-                    try { rec.start(); } catch(_) {}
-                }
-            };
-
-            this.recognition = rec;
-            this.micActive   = true;
-            try {
-                rec.start();
-            } catch(e) {
-                console.error('Could not start recognition:', e);
-                this.micActive   = false;
-                this.recognition = null;
-            }
+            rec.onerror = (e) => { if (e.error !== 'no-speech' && e.error !== 'aborted') console.warn(e.error); };
+            rec.onend = () => { if (self.micActive && !self.speaking) try { rec.start(); } catch(_) {} };
+            this.recognition = rec; this.micActive = true;
+            try { rec.start(); } catch(e) { this.micActive = false; this.recognition = null; }
         },
 
         stopMic() {
-            this.micActive   = false;
-            this.interimText = '';
-            if (this.recognition) {
-                try { this.recognition.abort(); } catch(_) {}
-                this.recognition = null;
-            }
+            this.micActive = false; this.interimText = '';
+            if (this.recognition) { try { this.recognition.abort(); } catch(_) {} this.recognition = null; }
         },
 
         // ── TTS ───────────────────────────────────────────────────────────────
-        stopSpeaking() {
-            if (window.speechSynthesis) window.speechSynthesis.cancel();
-            this.speaking = false;
-        },
+        stopSpeaking() { if (window.speechSynthesis) window.speechSynthesis.cancel(); this.speaking = false; },
 
         speakMessage(text) {
-            if (!window.speechSynthesis || !ttsEnabled) return;
-            // Pause mic while AI speaks so it doesn't pick up the AI voice
-            if (this.recognition) { try { this.recognition.abort(); } catch(_) {} }
+            if (!ttsEnabled) return;
+            if (this.recognition) try { this.recognition.abort(); } catch(_) {}
             this.speaking = true;
             const self = this;
             speak(text, () => {
                 self.speaking = false;
-                // Restart mic if user had it active
-                if (self.micActive) {
-                    try { self.recognition && self.recognition.start(); } catch(_) {}
-                }
+                if (self.micActive && self.recognition) try { self.recognition.start(); } catch(_) {}
             });
+        },
+
+        // ── response analytics ────────────────────────────────────────────────
+        recordResponseTime() {
+            if (this.behavioral.responseStartTs) {
+                const elapsed = (Date.now() - this.behavioral.responseStartTs) / 1000;
+                this._responseTimes.push(elapsed);
+                const avg = this._responseTimes.reduce((a,b)=>a+b,0) / this._responseTimes.length;
+                this.behavioral.avgResponseSec = Math.round(avg);
+                // Confidence heuristic: quick thoughtful responses = higher confidence
+                if (elapsed > 5 && elapsed < 90) this.behavioral.confidence = Math.min(100, this.behavioral.confidence + 3);
+            }
         },
 
         // ── send answer ───────────────────────────────────────────────────────
         async sendAnswer() {
             const answer = (this.userInput + this.interimText).trim();
             if (!answer || this.loading) return;
-            this.stopMic();
-            this.stopSpeaking();
-            this.interimText = '';
-            this.userInput   = '';
+            this.stopMic(); this.stopSpeaking();
+            this.interimText = ''; this.userInput = '';
             await this.sendAnswerText(answer);
         },
 
         async sendAnswerText(answer) {
+            this.recordResponseTime();
             this.pushMsg('user', answer);
             this.loading = true;
             if (this._timerHandle) { clearInterval(this._timerHandle); this._timerHandle = null; }
 
             try {
-                const res  = await fetch('/api/interview-answer.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ sessionId: IV_SESSION_ID, jobId: IV_JOB_ID, answer }),
+                const res = await fetch('/api/interview-answer.php', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        sessionId: IV_SESSION_ID, jobId: IV_JOB_ID,
+                        answer,
+                        behavioral: this.behavioral,
+                        violations: this.violations,
+                        questionNum: this.questionCount,
+                    }),
                 });
                 const data = await res.json();
                 this.loading = false;
+
+                if (data.done) {
+                    await this.endInterview(true);
+                    return;
+                }
+
                 if (data.success && data.nextQuestion) {
-                    this.pushMsg('ai', data.nextQuestion);
+                    // AI may return per-question time limit
+                    if (data.questionTimeSec) Object.assign(this, { QUESTION_TIME: data.questionTimeSec });
                     this.questionCount++;
+                    this.pushMsg('ai', data.nextQuestion, this.questionCount);
                     this.$nextTick(() => this.speakMessage(data.nextQuestion));
-                    // Check max questions limit
+                    this.behavioral.responseStartTs = Date.now();
+
                     if (this.questionCount > MAX_QUESTIONS) {
-                        this.pushMsg('ai', 'We have reached the maximum number of questions. Thank you for your time!');
                         await this.endInterview(true);
                         return;
                     }
                     this.resetTimer();
-                } else if (data.done) {
-                    await this.endInterview(true);
                 } else {
-                    this.pushMsg('ai', 'Sorry, there was an issue. Please try again.');
+                    this.pushMsg('ai', 'I apologise — there was a brief issue. Please continue with your answer.');
                     this.resetTimer();
                 }
             } catch(e) {
@@ -690,28 +754,38 @@ function interviewApp() {
 
         // ── end interview ─────────────────────────────────────────────────────
         async endInterview(skipConfirm = false) {
-            if (!skipConfirm && !confirm('Are you sure you want to end the interview? This cannot be undone.')) return;
-            this.stopMic();
-            this.stopSpeaking();
+            if (!skipConfirm && !confirm('End the interview now? This cannot be undone.')) return;
+            this.stopMic(); this.stopSpeaking();
             if (this._timerHandle) { clearInterval(this._timerHandle); this._timerHandle = null; }
+            if (this._totalHandle) { clearInterval(this._totalHandle); this._totalHandle = null; }
+            if (this._micRaf) cancelAnimationFrame(this._micRaf);
             this.loading = true;
+
             try {
-                const res  = await fetch('/api/interview-end.php', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'same-origin',
-                    body: JSON.stringify({ sessionId: IV_SESSION_ID, jobId: IV_JOB_ID }),
+                const res = await fetch('/api/interview-end.php', {
+                    method: 'POST', credentials: 'same-origin',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({
+                        sessionId: IV_SESSION_ID, jobId: IV_JOB_ID,
+                        violations: this.violations,
+                        behavioral: {
+                            ...this.behavioral,
+                            responseTimes: this._responseTimes,
+                            totalViolations: this.violations.length,
+                        },
+                    }),
                 });
                 const data = await res.json();
                 if (data.success) {
-                    const farewell = 'Thank you for completing the interview. Your responses have been recorded. Good luck!';
+                    const farewell = 'Thank you for completing the interview. Your responses have been recorded and will be reviewed. Good luck!';
                     this.pushMsg('ai', farewell);
                     this.speakMessage(farewell);
-                    setTimeout(() => window.location.href = '/dashboard.php', 4000);
+                    if (document.fullscreenElement) document.exitFullscreen().catch(()=>{});
+                    setTimeout(() => window.location.href = '/dashboard.php', 5000);
                 }
             } catch(e) { console.error(e); }
             this.loading = false;
-        }
+        },
     };
 }
 </script>

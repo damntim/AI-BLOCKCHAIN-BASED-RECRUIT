@@ -23,9 +23,9 @@ if (!empty($job['interview_start_at']) && $now < strtotime($job['interview_start
     header('Location: /dashboard.php?error=interview_not_started&starts=' . urlencode($startsAt)); exit;
 }
 
-// If face verify disabled or already verified, skip gate
+// If face verify disabled or already verified, go straight to practice
 if (!is_flag_enabled('FACE_VERIFY_ENABLED') || !empty($_SESSION['face_verified'])) {
-    header("Location: /interview.php?job={$jobId}");
+    header("Location: /interview-practice.php?job={$jobId}");
     exit;
 }
 
@@ -217,7 +217,7 @@ async function attemptVerify() {
         if (data.success && data.match) {
             document.getElementById('gate-verify').classList.add('hidden');
             document.getElementById('gate-success').classList.remove('hidden');
-            setTimeout(() => { window.location.href = `/interview.php?job=${JOB_ID}`; }, 1500);
+            setTimeout(() => { window.location.href = `/interview-practice.php?job=${JOB_ID}`; }, 1500);
         } else {
             document.getElementById('gate-verify').classList.add('hidden');
             document.getElementById('fail-reason').textContent =
