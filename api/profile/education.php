@@ -34,20 +34,32 @@ try {
 
     if (!$degree || !$inst) throw new InvalidArgumentException('Degree title and institution are required');
 
-    // Move temp cert if provided (token may point to .pdf, .jpg, .png, or .webp)
+    // Move temp cert — supports both analyse-cert (cert_XXXX.ext) and analyse-degree (rc_degrees/TOKEN.ext) temp paths
     $certPath = null; $certHash = null;
+    $certExt  = preg_replace('/[^a-z0-9]/', '', strtolower($input['cert_ext'] ?? ''));
     if ($certToken) {
-        foreach (['pdf','jpg','png','webp','gif'] as $tryExt) {
-            $tmp = sys_get_temp_dir() . DIRECTORY_SEPARATOR . 'cert_' . $certToken . '.' . $tryExt;
-            if (file_exists($tmp)) {
-                $dir = __DIR__ . '/../../storage/uploads/credentials';
-                if (!is_dir($dir)) mkdir($dir, 0750, true);
-                $fn = bin2hex(random_bytes(12)) . '.' . $tryExt;
-                rename($tmp, $dir . '/' . $fn);
-                $certPath = 'storage/uploads/credentials/' . $fn;
-                $certHash = hash('sha256', file_get_contents($dir . '/' . $fn));
-                break;
+        $extsToTry = $certExt ? [$certExt] : ['pdf','jpg','jpeg','png','webp','gif'];
+        $tmpDirs   = [
+            sys_get_temp_dir() . '/rc_degrees/',
+            sys_get_temp_dir() . DIRECTORY_SEPARATOR,
+        ];
+        $prefixes  = [$certToken . '.', 'cert_' . $certToken . '.'];
+        $found     = null;
+        foreach ($tmpDirs as $td) {
+            foreach ($prefixes as $pfx) {
+                foreach ($extsToTry as $tryExt) {
+                    $candidate = $td . $pfx . $tryExt;
+                    if (file_exists($candidate)) { $found = $candidate; $certExt = $tryExt; break 3; }
+                }
             }
+        }
+        if ($found) {
+            $dir = __DIR__ . '/../../storage/uploads/credentials';
+            if (!is_dir($dir)) mkdir($dir, 0750, true);
+            $fn = bin2hex(random_bytes(12)) . '.' . $certExt;
+            rename($found, $dir . '/' . $fn);
+            $certPath = 'storage/uploads/credentials/' . $fn;
+            $certHash = hash('sha256', file_get_contents($dir . '/' . $fn));
         }
     }
 

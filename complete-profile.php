@@ -274,61 +274,139 @@ include 'includes/nav.php';
             <?php endif; ?>
         </div>
 
-        <!-- Add/Edit modal -->
+        <!-- ── Add/Edit modal ─────────────────────────────────────────────── -->
         <div x-show="modal" x-cloak class="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
-            <div class="bg-white rounded-lg shadow-xl w-full max-w-lg flex flex-col max-h-[90vh]" @click.outside="modal=false">
+            <div class="bg-white rounded-lg shadow-xl w-full max-w-xl flex flex-col max-h-[92vh]" @click.outside="modal=false">
                 <div class="flex items-center justify-between px-5 py-3 border-b border-[#C5D8EE] flex-shrink-0">
                     <h3 class="font-semibold text-sm" x-text="editId?'Edit Education':'Add Education'"></h3>
                     <button @click="modal=false" class="text-[#4A6380] hover:text-[#C0392B]"><i class="fas fa-times"></i></button>
                 </div>
-                <form @submit.prevent="savEdu()" class="p-5 space-y-3 text-sm overflow-y-auto flex-1">
+                <div class="p-5 space-y-4 text-sm overflow-y-auto flex-1">
+
+                    <!-- ① Country ───────────────────────────────────────── -->
                     <div>
-                        <label class="block text-xs text-[#4A6380] mb-1">Degree / Qualification Title *</label>
-                        <input x-model="form.degree_title" required
-                               class="w-full border border-[#C5D8EE] rounded px-2.5 py-2 focus:outline-none focus:border-[#1E5FA8]"
-                               placeholder="e.g. Advanced Diploma in IT">
+                        <label class="block text-xs text-[#4A6380] mb-1">Country *</label>
+                        <select x-model="form.country" required
+                                @change="loadInstitutions()"
+                                class="w-full border border-[#C5D8EE] rounded px-2.5 py-2 bg-white focus:outline-none focus:border-[#1E5FA8]">
+                            <option value="">— Select country —</option>
+                            <option>Afghanistan</option><option>Albania</option><option>Algeria</option><option>Angola</option><option>Argentina</option><option>Armenia</option><option>Australia</option><option>Austria</option><option>Azerbaijan</option>
+                            <option>Bangladesh</option><option>Belarus</option><option>Belgium</option><option>Benin</option><option>Bolivia</option><option>Bosnia and Herzegovina</option><option>Botswana</option><option>Brazil</option><option>Bulgaria</option><option>Burkina Faso</option><option>Burundi</option>
+                            <option>Cambodia</option><option>Cameroon</option><option>Canada</option><option>Central African Republic</option><option>Chad</option><option>Chile</option><option>China</option><option>Colombia</option><option>Congo (DRC)</option><option>Congo (Republic)</option><option>Costa Rica</option><option>Croatia</option><option>Cuba</option><option>Cyprus</option><option>Czech Republic</option>
+                            <option>Denmark</option><option>Djibouti</option><option>Dominican Republic</option>
+                            <option>Ecuador</option><option>Egypt</option><option>El Salvador</option><option>Eritrea</option><option>Estonia</option><option>Eswatini</option><option>Ethiopia</option>
+                            <option>Finland</option><option>France</option>
+                            <option>Gabon</option><option>Gambia</option><option>Georgia</option><option>Germany</option><option>Ghana</option><option>Greece</option><option>Guatemala</option><option>Guinea</option><option>Guinea-Bissau</option>
+                            <option>Haiti</option><option>Honduras</option><option>Hungary</option>
+                            <option>India</option><option>Indonesia</option><option>Iran</option><option>Iraq</option><option>Ireland</option><option>Israel</option><option>Italy</option><option>Ivory Coast</option>
+                            <option>Jamaica</option><option>Japan</option><option>Jordan</option>
+                            <option>Kazakhstan</option><option>Kenya</option><option>Kosovo</option><option>Kuwait</option><option>Kyrgyzstan</option>
+                            <option>Laos</option><option>Latvia</option><option>Lebanon</option><option>Lesotho</option><option>Liberia</option><option>Libya</option><option>Lithuania</option><option>Luxembourg</option>
+                            <option>Madagascar</option><option>Malawi</option><option>Malaysia</option><option>Mali</option><option>Mauritania</option><option>Mauritius</option><option>Mexico</option><option>Moldova</option><option>Mongolia</option><option>Morocco</option><option>Mozambique</option><option>Myanmar</option>
+                            <option>Namibia</option><option>Nepal</option><option>Netherlands</option><option>New Zealand</option><option>Nicaragua</option><option>Niger</option><option>Nigeria</option><option>North Korea</option><option>North Macedonia</option><option>Norway</option>
+                            <option>Oman</option>
+                            <option>Pakistan</option><option>Palestine</option><option>Panama</option><option>Papua New Guinea</option><option>Paraguay</option><option>Peru</option><option>Philippines</option><option>Poland</option><option>Portugal</option>
+                            <option>Qatar</option>
+                            <option>Romania</option><option>Russia</option><option>Rwanda</option>
+                            <option>Saudi Arabia</option><option>Senegal</option><option>Serbia</option><option>Sierra Leone</option><option>Singapore</option><option>Slovakia</option><option>Slovenia</option><option>Somalia</option><option>South Africa</option><option>South Korea</option><option>South Sudan</option><option>Spain</option><option>Sri Lanka</option><option>Sudan</option><option>Sweden</option><option>Switzerland</option><option>Syria</option>
+                            <option>Taiwan</option><option>Tajikistan</option><option>Tanzania</option><option>Thailand</option><option>Togo</option><option>Tunisia</option><option>Turkey</option><option>Turkmenistan</option>
+                            <option>Uganda</option><option>Ukraine</option><option>United Arab Emirates</option><option>United Kingdom</option><option>United States</option><option>Uruguay</option><option>Uzbekistan</option>
+                            <option>Venezuela</option><option>Vietnam</option>
+                            <option>Yemen</option>
+                            <option>Zambia</option><option>Zimbabwe</option>
+                        </select>
                     </div>
-                    <div class="grid grid-cols-2 gap-3">
-                        <div><label class="block text-xs text-[#4A6380] mb-1">Institution *</label>
-                            <input x-model="form.institution" required
-                                   class="w-full border border-[#C5D8EE] rounded px-2.5 py-2 focus:outline-none focus:border-[#1E5FA8]">
-                        </div>
-                        <div><label class="block text-xs text-[#4A6380] mb-1">Country</label>
-                            <input x-model="form.country"
-                                   class="w-full border border-[#C5D8EE] rounded px-2.5 py-2 focus:outline-none focus:border-[#1E5FA8]">
-                        </div>
+
+                    <!-- ② Institution (AI dropdown) ───────────────────── -->
+                    <div>
+                        <label class="block text-xs text-[#4A6380] mb-1">Institution *
+                            <span x-show="instsLoading" class="text-[#1E5FA8]"><i class="fas fa-spinner fa-spin text-xs ml-1"></i>Loading…</span>
+                        </label>
+                        <select x-show="institutions.length>0" x-model="form.institution" required
+                                @change="onInstitutionChange()"
+                                class="w-full border border-[#C5D8EE] rounded px-2.5 py-2 bg-white focus:outline-none focus:border-[#1E5FA8]">
+                            <option value="">— Select institution —</option>
+                            <template x-for="inst in institutions" :key="inst">
+                                <option :value="inst" x-text="inst"></option>
+                            </template>
+                        </select>
+                        <p x-show="institutions.length===0 && instsLoading" class="text-xs text-[#8FAABF] mt-1">Loading institutions…</p>
+                        <p x-show="institutions.length===0 && !instsLoading && form.country" class="text-xs text-amber-500 mt-1">Select a country first to load institutions.</p>
                     </div>
-                    <div><label class="block text-xs text-[#4A6380] mb-1">Year Completed</label>
+
+                    <!-- ③ Degree (AI dropdown) ────────────────────────── -->
+                    <div>
+                        <label class="block text-xs text-[#4A6380] mb-1">Degree / Qualification *
+                            <span x-show="degreesLoading" class="text-[#1E5FA8]"><i class="fas fa-spinner fa-spin text-xs ml-1"></i>Loading…</span>
+                        </label>
+                        <select x-show="degrees.length>0" x-model="form.degree_title" required
+                                class="w-full border border-[#C5D8EE] rounded px-2.5 py-2 bg-white focus:outline-none focus:border-[#1E5FA8]">
+                            <option value="">— Select degree —</option>
+                            <template x-for="deg in degrees" :key="deg">
+                                <option :value="deg" x-text="deg"></option>
+                            </template>
+                        </select>
+                        <p x-show="degrees.length===0 && degreesLoading" class="text-xs text-[#8FAABF] mt-1">Loading degrees…</p>
+                        <p x-show="degrees.length===0 && !degreesLoading && form.institution" class="text-xs text-amber-500 mt-1">Select an institution to load degrees.</p>
+                    </div>
+
+                    <!-- ④ Year ────────────────────────────────────────── -->
+                    <div>
+                        <label class="block text-xs text-[#4A6380] mb-1">Year Completed</label>
                         <input type="number" x-model="form.year_completed" min="1950" :max="new Date().getFullYear()"
+                               placeholder="e.g. 2023"
                                class="w-full border border-[#C5D8EE] rounded px-2.5 py-2 focus:outline-none focus:border-[#1E5FA8]">
                     </div>
 
-                    <!-- Certificate upload -->
-                    <div>
-                        <label class="block text-xs text-[#4A6380] mb-1">Upload Certificate (PDF or image) — AI will analyse it</label>
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" @change="handleCert($event)"
-                               class="w-full text-xs text-[#4A6380] border border-[#C5D8EE] rounded p-2">
+                    <!-- ⑤ Degree certificate upload ───────────────────── -->
+                    <div class="border border-dashed border-[#C5D8EE] rounded-lg p-4">
+                        <label class="block text-xs font-semibold text-[#1A2332] mb-2">
+                            <i class="fas fa-file-diploma text-[#1E5FA8] mr-1"></i>
+                            Upload Degree Certificate (PDF or image) *
+                        </label>
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" @change="handleDegree($event)" required
+                               class="w-full text-xs text-[#4A6380]">
+                        <p class="text-xs text-[#8FAABF] mt-1">AI will verify this is a notified/accredited certificate</p>
                     </div>
 
-                    <!-- AI analysis result -->
-                    <div x-show="aiState==='loading'" class="bg-[#EBF3FC] rounded p-3 text-xs text-[#1E5FA8] text-center">
-                        <i class="fas fa-spinner fa-spin mr-1"></i>AI is analysing your certificate…
+                    <!-- AI degree analysis ─────────────────────────────── -->
+                    <div x-show="degState==='loading'" class="bg-[#EBF3FC] rounded p-3 text-xs text-[#1E5FA8] text-center">
+                        <i class="fas fa-spinner fa-spin mr-1"></i>AI is verifying your certificate…
                     </div>
-                    <div x-show="aiState==='done'" x-cloak class="border border-[#C5D8EE] rounded-lg p-3 space-y-3 text-xs">
-                        <p class="font-semibold text-[#1E5FA8] text-sm"><i class="fas fa-robot mr-1"></i>AI Certificate Analysis</p>
 
-                        <!-- Overall score banner -->
-                        <div :class="aiOverall>=70?'bg-[#E6F4ED] border-[#1A7A4A]/30':'bg-[#FDECEA] border-[#C0392B]/30'"
-                             class="border rounded-lg px-3 py-2 flex items-center justify-between">
-                            <span class="font-semibold" :class="aiOverall>=70?'text-[#1A7A4A]':'text-[#C0392B]'">Overall Score</span>
-                            <span class="text-lg font-bold" :class="aiOverall>=70?'text-[#1A7A4A]':'text-[#C0392B]'" x-text="aiOverall+'%'"></span>
+                    <!-- REJECTED — not notified -->
+                    <div x-show="degState==='rejected'" x-cloak
+                         class="border border-[#C0392B]/30 bg-[#FDECEA] rounded-lg p-4">
+                        <div class="flex items-center gap-2 mb-2">
+                            <i class="fas fa-ban text-[#C0392B] text-lg"></i>
+                            <span class="font-bold text-[#C0392B]">Certificate Rejected — Not Accredited</span>
+                        </div>
+                        <p class="text-xs text-[#C0392B] mb-2" x-text="degRejectedReason"></p>
+                        <p class="text-xs text-[#4A6380]">We only accept certificates from officially recognized and accredited institutions. Please upload a valid certificate or contact support.</p>
+                    </div>
+
+                    <!-- ACCEPTED — analysis result -->
+                    <div x-show="degState==='done'" x-cloak class="border border-[#C5D8EE] rounded-lg p-4 space-y-3 text-xs">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-robot text-[#1E5FA8]"></i>
+                            <span class="font-semibold text-sm text-[#1E5FA8]">AI Certificate Analysis</span>
+                            <span class="ml-auto px-2 py-0.5 rounded-full text-xs font-bold bg-[#E8F5EE] text-[#1A7A4A]">
+                                <i class="fas fa-check-circle mr-1"></i>Accredited
+                            </span>
                         </div>
 
-                        <!-- Score breakdown -->
+                        <!-- Score banner -->
+                        <div :class="degOverall>=70?'bg-[#E6F4ED] border-[#1A7A4A]/30':'bg-[#FFF3E6] border-[#B05C00]/30'"
+                             class="border rounded-lg px-3 py-2 flex items-center justify-between">
+                            <span class="font-semibold" :class="degOverall>=70?'text-[#1A7A4A]':'text-[#B05C00]'">Overall Score</span>
+                            <span class="text-lg font-bold" :class="degOverall>=70?'text-[#1A7A4A]':'text-[#B05C00]'" x-text="degOverall+'%'"></span>
+                        </div>
+
+                        <!-- Score bars -->
                         <div class="space-y-1.5">
-                            <template x-for="row in [{label:'Field match (25%)',val:aiFieldScore},{label:'Credibility (75%)',val:aiCredibility}]" :key="row.label">
+                            <template x-for="row in [{label:'Field match',val:degFieldScore},{label:'Credibility',val:degCredibility}]" :key="row.label">
                                 <div class="flex items-center gap-2">
-                                    <span class="text-[#4A6380] w-32 shrink-0" x-text="row.label"></span>
+                                    <span class="text-[#4A6380] w-24 shrink-0" x-text="row.label"></span>
                                     <div class="flex-1 bg-[#EEF3F8] rounded-full h-1.5">
                                         <div :style="'width:'+row.val+'%'"
                                              :class="row.val>=70?'bg-[#1A7A4A]':row.val>=40?'bg-[#B05C00]':'bg-[#C0392B]'"
@@ -341,42 +419,44 @@ include 'includes/nav.php';
                             </template>
                         </div>
 
-                        <!-- Suggested title -->
-                        <p class="text-[#4A6380]">AI extracted title: <strong x-text="aiSuggestion || '—'"></strong></p>
+                        <!-- Extracted info -->
+                        <div class="grid grid-cols-2 gap-x-3 gap-y-1">
+                            <div><span class="text-[#4A6380]">Holder: </span><strong x-text="degHolderName||'—'"></strong></div>
+                            <div><span class="text-[#4A6380]">Title: </span><strong x-text="degTitle||'—'"></strong></div>
+                            <div><span class="text-[#4A6380]">Institution: </span><strong x-text="degInstitution||'—'"></strong></div>
+                            <div><span class="text-[#4A6380]">Year: </span><strong x-text="degYear||'—'"></strong></div>
+                        </div>
+
+                        <!-- Auto-fill notice -->
+                        <div x-show="degAutoFilled" class="bg-[#EBF3FC] rounded p-2 text-[#1E5FA8]">
+                            <i class="fas fa-magic mr-1"></i> Fields auto-filled from certificate.
+                        </div>
 
                         <!-- AI notes -->
-                        <div x-show="aiNotes" class="bg-[#F7FAFD] border border-[#C5D8EE] rounded p-2 text-[#4A6380] italic" x-text="aiNotes"></div>
+                        <div x-show="degNotes" class="bg-[#F7FAFD] border border-[#C5D8EE] rounded p-2 text-[#4A6380] italic" x-text="degNotes"></div>
 
-                        <!-- Trust flags -->
-                        <div x-show="aiTrustFlags.length > 0">
+                        <!-- Trust / Risk flags -->
+                        <div x-show="degTrust.length>0">
                             <p class="font-semibold text-[#4A6380] mb-1">Observations</p>
                             <div class="space-y-1">
-                                <template x-for="flag in aiTrustFlags" :key="flag">
-                                    <div class="flex items-start gap-1.5 text-[#4A6380]">
-                                        <i class="fas fa-circle-check text-[#1A7A4A] mt-0.5 shrink-0"></i>
-                                        <span x-text="flag"></span>
-                                    </div>
+                                <template x-for="f in degTrust" :key="f">
+                                    <div class="flex items-start gap-1.5 text-[#4A6380]"><i class="fas fa-circle-check text-[#1A7A4A] mt-0.5 shrink-0"></i><span x-text="f"></span></div>
                                 </template>
                             </div>
                         </div>
-
-                        <!-- Risk flags -->
-                        <div x-show="aiRiskFlags.length > 0">
+                        <div x-show="degRisk.length>0">
                             <p class="font-semibold text-[#C0392B] mb-1">Concerns</p>
                             <div class="space-y-1">
-                                <template x-for="flag in aiRiskFlags" :key="flag">
-                                    <div class="flex items-start gap-1.5 text-[#C0392B]">
-                                        <i class="fas fa-triangle-exclamation mt-0.5 shrink-0"></i>
-                                        <span x-text="flag"></span>
-                                    </div>
+                                <template x-for="f in degRisk" :key="f">
+                                    <div class="flex items-start gap-1.5 text-[#C0392B]"><i class="fas fa-triangle-exclamation mt-0.5 shrink-0"></i><span x-text="f"></span></div>
                                 </template>
                             </div>
                         </div>
                     </div>
 
-                </form>
+                </div>
                 <div class="flex gap-2 px-5 py-3 border-t border-[#C5D8EE] flex-shrink-0">
-                    <button @click="savEdu()" :disabled="saving"
+                    <button @click="savEdu()" :disabled="saving || degState==='' || degState==='rejected' || degState==='loading'"
                             class="bg-[#1E5FA8] text-white px-4 py-2 rounded text-sm font-medium hover:bg-[#154680] disabled:opacity-50">
                         <span x-text="saving?'Saving…':'Save'"></span>
                     </button>
@@ -384,6 +464,12 @@ include 'includes/nav.php';
                             class="border border-[#C5D8EE] text-[#4A6380] px-4 py-2 rounded text-sm hover:border-[#1E5FA8]">
                         Cancel
                     </button>
+                    <span x-show="degState==='rejected'" class="text-xs text-[#C0392B] self-center ml-1">
+                        <i class="fas fa-lock mr-1"></i>Cannot save — rejected certificate
+                    </span>
+                    <span x-show="degState===''" class="text-xs text-[#8FAABF] self-center ml-1">
+                        <i class="fas fa-upload mr-1"></i>Upload certificate to save
+                    </span>
                 </div>
             </div>
         </div>
@@ -774,44 +860,121 @@ let eduAppRef;
 function educationApp() {
     return {
         modal: false, editId: null, saving: false,
-        aiState: '', aiSuggestion: '', aiFieldScore: 0, aiCredibility: 0, aiOverall: 0,
-        aiTrustFlags: [], aiRiskFlags: [], aiNotes: '', certToken: '',
+        // Country/institution/degree dropdowns
+        institutions: [], instsLoading: false,
+        degrees: [], degreesLoading: false,
+        // Degree certificate AI analysis
+        degState: '', degToken: '', degExt: '',
+        degOverall: 0, degFieldScore: 0, degCredibility: 0,
+        degHolderName: '', degTitle: '', degInstitution: '', degYear: '',
+        degNotes: '', degTrust: [], degRisk: [], degRejectedReason: '', degAutoFilled: false,
         form: { degree_title:'', institution:'', country:'', year_completed:'' },
+
         init() { eduAppRef = this; },
-        openAdd()  { this.editId=null; this.form={degree_title:'',institution:'',country:'',year_completed:''}; this.aiState=''; this.modal=true; },
-        openEdit(r){ this.editId=r.id; this.form={degree_title:r.degree_title,institution:r.institution,country:r.country||'',year_completed:r.year_completed||''}; this.aiState=''; this.modal=true; },
-        async handleCert(evt) {
+
+        openAdd() {
+            this.editId=null;
+            this.form={degree_title:'',institution:'',country:'',year_completed:''};
+            this.institutions=[]; this.degrees=[];
+            this.degState=''; this.degToken='';
+            this.modal=true;
+        },
+        openEdit(r) {
+            this.editId=r.id;
+            this.form={degree_title:r.degree_title,institution:r.institution,country:r.country||'',year_completed:r.year_completed||''};
+            this.institutions=[]; this.degrees=[];
+            this.degState=''; this.degToken='';
+            this.modal=true;
+            // Pre-load institutions for this country
+            if (r.country) this.loadInstitutions();
+        },
+
+        async loadInstitutions() {
+            const country = this.form.country.trim();
+            if (!country || country.length < 2) return;
+            this.instsLoading = true; this.institutions = []; this.degrees = [];
+            try {
+                const d = await api('/api/profile/ai-institutions.php', {country, mode:'institutions'});
+                if (d.success) this.institutions = d.items || [];
+            } catch(e) { /* silently fail — user can type */ }
+            this.instsLoading = false;
+        },
+
+        async onInstitutionChange() {
+            if (!this.form.institution) return;
+            const country = this.form.country.trim();
+            if (!country) return;
+            this.degreesLoading = true; this.degrees = [];
+            try {
+                const d = await api('/api/profile/ai-institutions.php', {country, institution: this.form.institution, mode:'degrees'});
+                if (d.success) this.degrees = d.items || [];
+            } catch(e) {}
+            this.degreesLoading = false;
+        },
+
+        async handleDegree(evt) {
             const file = evt.target.files[0]; if (!file) return;
-            this.aiState = 'loading'; this.aiSuggestion=''; this.aiFieldScore=0; this.aiCredibility=0; this.aiOverall=0; this.aiTrustFlags=[]; this.aiRiskFlags=[]; this.aiNotes='';
+            this.degState='loading'; this.degToken=''; this.degAutoFilled=false;
+            this.degHolderName=''; this.degTitle=''; this.degInstitution=''; this.degYear='';
+            this.degTrust=[]; this.degRisk=[]; this.degNotes=''; this.degRejectedReason='';
             const fd = new FormData();
-            fd.append('cert', file);
+            fd.append('degree', file);
             fd.append('title',       this.form.degree_title);
             fd.append('institution', this.form.institution);
             fd.append('country',     this.form.country);
             fd.append('year',        this.form.year_completed);
-            const d = await api('/api/profile/analyse-cert.php', fd);
-            if (d.success) {
-                this.aiSuggestion  = d.suggested_title;
-                this.aiFieldScore  = d.field_score    || 0;
-                this.aiCredibility = d.credibility_score || 0;
-                this.aiOverall     = d.overall_score  || 0;
-                this.aiTrustFlags  = d.trust_flags    || [];
-                this.aiRiskFlags   = d.risk_flags     || [];
-                this.aiNotes       = d.ai_notes       || '';
-                this.certToken     = d.temp_token;
-                this.aiState       = 'done';
-            } else { this.aiState=''; alert(d.error||'Could not analyse certificate.'); }
+            const d = await api('/api/profile/analyse-degree.php', fd);
+            if (!d.success) { this.degState=''; alert(d.error||'Could not analyse certificate.'); return; }
+
+            // Notified check — hard reject
+            if (!d.is_notified) {
+                this.degState = 'rejected';
+                this.degRejectedReason = d.not_notified_reason || 'This certificate is from an unrecognized or non-accredited institution.';
+                return;
+            }
+
+            this.degOverall      = d.overall_score     || 0;
+            this.degFieldScore   = d.field_match_score || 0;
+            this.degCredibility  = d.credibility_score || 0;
+            this.degHolderName   = d.holder_name       || '';
+            this.degTitle        = d.degree_title      || '';
+            this.degInstitution  = d.institution       || '';
+            this.degYear         = d.year_completed    || '';
+            this.degNotes        = d.ai_notes          || '';
+            this.degTrust        = d.trust_flags       || [];
+            this.degRisk         = d.risk_flags        || [];
+            this.degToken        = d.temp_token        || '';
+            this.degExt          = d.temp_ext          || '';
+            this.degState        = 'done';
+
+            // Auto-fill empty form fields from AI extraction
+            let filled = false;
+            if (!this.form.degree_title && d.degree_title)  { this.form.degree_title  = d.degree_title;  filled=true; }
+            if (!this.form.institution  && d.institution)   { this.form.institution   = d.institution;   filled=true; }
+            if (!this.form.country      && d.country)       { this.form.country       = d.country;       filled=true; }
+            if (!this.form.year_completed && d.year_completed){ this.form.year_completed = d.year_completed; filled=true; }
+            this.degAutoFilled = filled;
         },
+
         async savEdu() {
+            if (this.degState === '')         { alert('Please upload your degree certificate first.'); return; }
+            if (this.degState === 'rejected') { alert('Cannot save — certificate was rejected.'); return; }
             this.saving=true;
-            const d = await api('/api/profile/education.php', {...this.form, id:this.editId, cert_token:this.certToken,
-                ai_suggested_title:this.aiSuggestion, ai_match_score:this.aiOverall,
-                ai_match_ok: this.aiState==='done'?(this.aiOverall>=70?1:0):null,
-                ai_notes: this.aiNotes});
+            const d = await api('/api/profile/education.php', {
+                ...this.form,
+                id: this.editId,
+                cert_token:        this.degToken,
+                cert_ext:          this.degExt,
+                ai_suggested_title: this.degTitle,
+                ai_match_score:    this.degOverall,
+                ai_match_ok:       this.degState==='done' ? (this.degOverall>=70?1:0) : null,
+                ai_notes:          this.degNotes,
+            });
             if (d.success) { this.modal=false; location.reload(); }
             else alert(d.error||'Error saving.');
             this.saving=false;
         },
+
         async remove(id) {
             if (!confirm('Delete this education entry?')) return;
             const d = await api('/api/profile/education.php', {id, _delete:1});

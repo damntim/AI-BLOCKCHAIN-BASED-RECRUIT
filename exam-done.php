@@ -28,21 +28,24 @@ if ($score === null && !$terminated) {
 }
 
 $marksPublished = false;
-// Check if the job has published marks for this session
-if ($score !== null) {
-    $uid = current_user_id();
-    $pub = pdo()->prepare("
-        SELECT j.marks_published
-        FROM exam_sessions es
-        JOIN exams e ON e.id = es.exam_id
-        JOIN jobs j ON j.id = e.job_id
-        JOIN applications a ON a.job_id = j.id AND a.user_id = es.user_id
-        WHERE es.user_id = ? AND es.submitted_at IS NOT NULL
-        ORDER BY es.submitted_at DESC LIMIT 1
-    ");
-    $pub->execute([$uid]);
-    $pubRow = $pub->fetch();
-    $marksPublished = (bool)($pubRow['marks_published'] ?? false);
+$verifyCode     = null;
+$uid = current_user_id();
+
+// Fetch latest session for verify code + marks_published
+$latestSess = pdo()->prepare("
+    SELECT es.verify_code, j.marks_published, j.title as job_title, c.company_name
+    FROM exam_sessions es
+    JOIN exams e ON e.id = es.exam_id
+    JOIN jobs j  ON j.id = e.job_id
+    JOIN companies c ON c.id = j.company_id
+    WHERE es.user_id = ? AND es.submitted_at IS NOT NULL
+    ORDER BY es.submitted_at DESC LIMIT 1
+");
+$latestSess->execute([$uid]);
+$sessRow = $latestSess->fetch();
+if ($sessRow) {
+    $marksPublished = (bool)($sessRow['marks_published'] ?? false);
+    $verifyCode     = $sessRow['verify_code'] ?? null;
 }
 ?>
 <!DOCTYPE html>
@@ -107,6 +110,24 @@ if ($score !== null) {
         <?php else: ?>
         <p class="text-sm text-[#4A6380] mb-8 leading-relaxed">Your exam has been submitted successfully. Results will be processed by AI and recorded on the blockchain.</p>
         <?php endif; ?>
+      <?php endif; ?>
+
+      <?php if ($verifyCode): ?>
+      <div class="bg-[#0a0f1a] border border-amber-500/30 rounded-[10px] p-5 mb-6 text-center">
+        <div class="text-xs font-bold tracking-[.12em] text-amber-400 uppercase mb-2">
+          <i class="fa-solid fa-cubes mr-1.5"></i>Blockchain Verification Code
+        </div>
+        <div class="font-mono font-extrabold text-amber-300 text-2xl tracking-[.18em] mb-2"><?= htmlspecialchars($verifyCode) ?></div>
+        <p class="text-xs text-[#94a3b8] leading-relaxed mb-3">
+          Save this code. Use it on the public
+          <a href="/verify.php" class="text-amber-400 underline hover:text-amber-300">Verify page</a>
+          to prove your result is anchored on the ICP blockchain and has not been tampered with.
+        </p>
+        <button onclick="navigator.clipboard.writeText('<?= htmlspecialchars($verifyCode) ?>').then(()=>this.textContent='Copied!')"
+                class="text-xs text-amber-400 hover:text-amber-300 border border-amber-500/30 rounded px-3 py-1 transition-colors">
+          <i class="fa-solid fa-copy mr-1"></i>Copy Code
+        </button>
+      </div>
       <?php endif; ?>
 
       <a href="/dashboard.php"

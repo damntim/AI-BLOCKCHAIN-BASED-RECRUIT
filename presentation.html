@@ -1,0 +1,1278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RecruitChain — Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#0a0f1a;
+  --navy2:#0d1420;
+  --navy3:#111827;
+  --blue:#1E5FA8;
+  --blue2:#2563eb;
+  --gold:#F59E0B;
+  --gold2:#FCD34D;
+  --green:#10B981;
+  --red:#EF4444;
+  --text:#E2E8F0;
+  --muted:#94a3b8;
+  --border:rgba(30,95,168,0.25);
+}
+html,body{width:100%;height:100%;overflow:hidden;background:var(--navy);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif}
+.deck{width:100%;height:100vh;position:relative;overflow:hidden}
+.slide{position:absolute;inset:0;display:none;flex-direction:column;overflow:hidden;animation:fadeIn .5s ease}
+.slide.active{display:flex}
+@keyframes fadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── NAV ── */
+.nav{position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(10,15,26,.95);backdrop-filter:blur(12px);border-top:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;z-index:100}
+.nav-btn{background:rgba(30,95,168,.15);border:1px solid var(--border);color:var(--text);width:38px;height:38px;border-radius:8px;cursor:pointer;font-size:16px;transition:.2s;display:flex;align-items:center;justify-content:center}
+.nav-btn:hover{background:var(--blue);border-color:var(--blue)}
+.slide-counter{font-family:'Syne',sans-serif;font-size:13px;color:var(--muted);letter-spacing:.05em}
+.progress-bar{position:fixed;bottom:52px;left:0;right:0;height:2px;background:rgba(255,255,255,.07);z-index:99}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--gold));transition:width .4s ease}
+
+/* ── COMMON LAYOUT ── */
+.slide-inner{flex:1;display:flex;flex-direction:column;padding:36px 56px 90px;overflow-y:auto;overflow-x:hidden}
+.slide-tag{font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:10px}
+.slide-title{font-family:'Syne',sans-serif;font-size:clamp(24px,3vw,38px);font-weight:800;line-height:1.15;margin-bottom:6px}
+.slide-sub{font-size:14px;color:var(--muted);margin-bottom:24px;max-width:700px}
+.divider{width:48px;height:3px;background:var(--gold);border-radius:2px;margin:12px 0 22px}
+
+/* ── CARDS ── */
+.card{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:18px 20px}
+.card-sm{padding:14px 16px}
+.glow-gold{box-shadow:0 0 20px rgba(245,158,11,.2)}
+.glow-blue{box-shadow:0 0 20px rgba(30,95,168,.25)}
+
+/* ── SLIDE 1 — TITLE ── */
+#s1{background:radial-gradient(ellipse at 60% 40%,rgba(30,95,168,.18) 0%,transparent 60%),var(--navy)}
+#s1 .canvas{position:absolute;inset:0;z-index:0}
+#s1 .content{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:60px 72px;padding-bottom:80px}
+#s1 .logo-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:99px;padding:6px 16px;font-size:12px;color:var(--gold);font-weight:700;letter-spacing:.1em;margin-bottom:28px}
+#s1 h1{font-family:'Syne',sans-serif;font-size:clamp(44px,6vw,80px);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-bottom:14px}
+#s1 h1 span{color:var(--gold)}
+#s1 .byline{font-size:15px;color:var(--muted);line-height:1.8;margin-bottom:36px}
+#s1 .byline strong{color:var(--text)}
+#s1 .badges{display:flex;flex-wrap:wrap;gap:10px}
+#s1 .badge{background:rgba(30,95,168,.15);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:12px;color:var(--muted)}
+#s1 .badge i{color:var(--blue);margin-right:6px}
+#s1 .icp-badge{position:absolute;right:72px;bottom:100px;background:var(--navy2);border:1px solid var(--border);border-radius:16px;padding:24px 30px;text-align:center}
+#s1 .icp-badge .hex{width:56px;height:56px;background:linear-gradient(135deg,var(--gold),#f97316);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;margin:0 auto 10px}
+#s1 .icp-badge p{font-family:'Syne',sans-serif;font-weight:700;font-size:13px;color:var(--text)}
+#s1 .icp-badge span{font-size:11px;color:var(--muted)}
+
+/* ── SLIDE 2 — PROBLEMS ── */
+.prob-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;flex:1;align-content:start}
+.prob-card{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:20px 16px;display:flex;flex-direction:column;gap:10px;transition:.2s}
+.prob-card:hover{border-color:var(--blue);transform:translateY(-2px)}
+.prob-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.prob-card h3{font-family:'Syne',sans-serif;font-weight:700;font-size:14px;line-height:1.3}
+.prob-card p{font-size:12px;color:var(--muted);line-height:1.6;flex:1}
+.bottom-note{margin-top:16px;background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);border-radius:8px;padding:12px 18px;font-size:13px;color:#fca5a5;display:flex;align-items:center;gap:10px}
+
+/* ── SLIDE 3 — OBJECTIVES ── */
+.obj-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;align-content:start}
+.gen-obj{grid-column:1/-1;background:linear-gradient(135deg,rgba(30,95,168,.2),rgba(30,95,168,.05));border:1px solid rgba(30,95,168,.4);border-radius:12px;padding:20px 24px}
+.gen-obj p{font-family:'Syne',sans-serif;font-size:16px;font-weight:600;line-height:1.6}
+.spec-list{display:flex;flex-direction:column;gap:10px;grid-column:1/-1}
+.spec-item{display:flex;align-items:flex-start;gap:12px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:12px 16px}
+.spec-num{width:26px;height:26px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:12px;font-weight:700;flex-shrink:0}
+.spec-item p{font-size:13px;line-height:1.5;color:var(--text)}
+.pipeline-mini{display:flex;align-items:center;gap:0;flex-wrap:wrap;margin-top:16px;grid-column:1/-1}
+.pip-node{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:8px 14px;font-size:11px;font-weight:700;font-family:'Syne',sans-serif;white-space:nowrap}
+.pip-arrow{color:var(--blue);margin:0 6px;font-size:12px;flex-shrink:0}
+
+/* ── SLIDE 4 — ARCHITECTURE ── */
+.arch-layout{display:flex;gap:24px;flex:1;align-items:flex-start}
+.arch-services{display:flex;flex-direction:column;gap:10px;flex:1}
+.svc-card{display:flex;align-items:center;gap:14px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:14px 18px}
+.svc-icon{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.svc-info h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:700}
+.svc-info p{font-size:12px;color:var(--muted)}
+.svc-port{font-size:11px;font-weight:700;font-family:'Syne',sans-serif;color:var(--gold);background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);border-radius:5px;padding:2px 8px;margin-left:auto;flex-shrink:0}
+.arch-right{width:280px;display:flex;flex-direction:column;gap:14px}
+.arch-diagram{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:20px;flex:1}
+.arch-diagram h4{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:14px;letter-spacing:.05em}
+.flow-box{background:var(--navy3);border:1px solid var(--border);border-radius:8px;padding:8px 12px;text-align:center;font-size:12px;font-weight:600;margin-bottom:6px}
+.flow-down{text-align:center;color:var(--blue);font-size:13px;margin-bottom:6px}
+.chain-box{background:linear-gradient(135deg,rgba(245,158,11,.15),rgba(245,158,11,.05));border:1px solid rgba(245,158,11,.4);border-radius:10px;padding:14px;text-align:center}
+.chain-box i{color:var(--gold);font-size:22px;display:block;margin-bottom:6px}
+.chain-box p{font-size:12px;font-weight:700;color:var(--gold)}
+.chain-box span{font-size:10px;color:var(--muted);font-family:'Syne',sans-serif;letter-spacing:.05em}
+
+/* ── SLIDE 5 — PIPELINE ── */
+.pipeline-big{display:flex;flex-direction:column;gap:0;flex:1}
+.pip-stage{display:flex;align-items:stretch;gap:16px;margin-bottom:10px;position:relative}
+.pip-stage::after{content:'';position:absolute;left:31px;bottom:-10px;width:2px;height:10px;background:linear-gradient(to bottom,var(--border),transparent)}
+.pip-stage:last-child::after{display:none}
+.pip-dot{width:64px;height:64px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0}
+.pip-body{flex:1;background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:12px 18px;display:flex;align-items:center;justify-content:space-between}
+.pip-body h4{font-family:'Syne',sans-serif;font-size:15px;font-weight:700}
+.pip-body p{font-size:12px;color:var(--muted)}
+.pip-chain{display:flex;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.2);border-radius:6px;padding:4px 10px;flex-shrink:0}
+.pip-action{font-size:12px;color:var(--muted);font-style:italic;flex-shrink:0;padding-right:8px}
+
+/* ── SLIDE 6 — AI SCREENING ── */
+.screen-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1}
+.screen-col{display:flex;flex-direction:column;gap:12px}
+.vs-tag{display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:4px}
+.old-card{background:rgba(239,68,68,.06);border:1px solid rgba(239,68,68,.2);border-radius:10px;padding:14px 16px}
+.old-card h4{color:#f87171;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px}
+.new-card{background:rgba(16,185,129,.06);border:1px solid rgba(16,185,129,.2);border-radius:10px;padding:14px 16px}
+.new-card h4{color:#34d399;font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:8px}
+.dim-list{display:flex;flex-direction:column;gap:6px}
+.dim-row{display:flex;align-items:center;gap:10px;font-size:12px}
+.dim-label{width:140px;color:var(--muted);flex-shrink:0}
+.dim-bar{flex:1;height:6px;background:rgba(255,255,255,.07);border-radius:3px;overflow:hidden}
+.dim-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--blue),var(--blue2))}
+.stat-chips{display:flex;gap:10px;flex-wrap:wrap}
+.stat-chip{background:var(--navy2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;text-align:center}
+.stat-chip .val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--gold)}
+.stat-chip .lbl{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ── SLIDE 7 — ANTI-CHEAT ── */
+.ac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;flex:1;align-content:start}
+.ac-card{background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:14px 14px;display:flex;flex-direction:column;gap:8px}
+.ac-card .icon{font-size:20px;margin-bottom:2px}
+.ac-card h4{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;line-height:1.3}
+.ac-card p{font-size:11px;color:var(--muted);line-height:1.5;flex:1}
+.weight{font-size:10px;font-weight:700;border-radius:4px;padding:2px 8px;align-self:flex-start}
+.w-high{background:rgba(239,68,68,.15);color:#f87171}
+.w-med{background:rgba(245,158,11,.12);color:#fcd34d}
+.w-block{background:rgba(16,185,129,.12);color:#34d399}
+.ws-note{grid-column:1/-1;background:rgba(30,95,168,.1);border:1px solid rgba(30,95,168,.3);border-radius:8px;padding:12px 18px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:10px}
+
+/* ── SLIDE 8 — BIOMETRIC ── */
+.bio-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1}
+.bio-phase{background:var(--navy2);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:12px}
+.bio-phase h3{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;display:flex;align-items:center;gap:8px}
+.bio-step{display:flex;align-items:flex-start;gap:10px;font-size:13px;line-height:1.6}
+.bio-num{width:22px;height:22px;background:var(--blue);border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0;margin-top:2px}
+.embed-vis{background:var(--navy3);border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;position:relative;overflow:hidden;height:110px}
+.embed-vis .dots{position:absolute;inset:0}
+.embed-dot{position:absolute;width:8px;height:8px;border-radius:50%;opacity:.7}
+.test-results{display:flex;flex-direction:column;gap:8px}
+.test-row{display:flex;align-items:center;justify-content:space-between;background:var(--navy3);border-radius:8px;padding:10px 14px;font-size:12px}
+.test-row .pass{color:var(--green);font-weight:700}
+.test-row .fail{color:var(--red);font-weight:700}
+
+/* ── SLIDE 9 — AI INTERVIEW ── */
+.iv-layout{display:grid;grid-template-columns:1fr 1.2fr;gap:24px;flex:1}
+.iv-flow{display:flex;flex-direction:column;gap:8px}
+.iv-step{display:flex;align-items:center;gap:12px;background:var(--navy2);border:1px solid var(--border);border-radius:9px;padding:12px 16px}
+.iv-step-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.iv-step h4{font-family:'Syne',sans-serif;font-size:13px;font-weight:700}
+.iv-step p{font-size:11px;color:var(--muted)}
+.iv-arrow{text-align:center;color:var(--blue);font-size:11px;padding:2px 0}
+.spider-wrap{display:flex;flex-direction:column;gap:16px}
+.spider-label{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:6px;letter-spacing:.05em}
+.dim-bars{display:flex;flex-direction:column;gap:10px}
+.dim-bar-row{display:flex;align-items:center;gap:10px;font-size:13px}
+.dim-name{width:160px;flex-shrink:0;color:var(--text)}
+.dim-bar-outer{flex:1;height:8px;background:rgba(255,255,255,.07);border-radius:4px;overflow:hidden}
+.dim-bar-inner{height:100%;border-radius:4px}
+.iv-stats{display:flex;gap:12px;flex-wrap:wrap}
+.iv-stat{background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;text-align:center;flex:1}
+.iv-stat .v{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--gold)}
+.iv-stat .l{font-size:11px;color:var(--muted);margin-top:3px}
+
+/* ── SLIDE 10 — BLOCKCHAIN ── */
+#s10{background:radial-gradient(ellipse at 50% 20%,rgba(245,158,11,.08) 0%,transparent 55%),var(--navy)}
+.bc-layout{display:grid;grid-template-columns:1.1fr 1fr;gap:24px;flex:1}
+.bc-milestones{display:flex;flex-direction:column;gap:10px}
+.bc-block{display:flex;align-items:stretch;gap:12px}
+.bc-num{width:40px;display:flex;flex-direction:column;align-items:center}
+.bc-num-badge{width:36px;height:36px;border-radius:9px;background:linear-gradient(135deg,rgba(245,158,11,.25),rgba(245,158,11,.1));border:1px solid rgba(245,158,11,.4);display:flex;align-items:center;justify-content:center;font-family:'Syne',sans-serif;font-size:13px;font-weight:800;color:var(--gold);flex-shrink:0}
+.bc-num-line{width:2px;flex:1;background:linear-gradient(to bottom,rgba(245,158,11,.3),transparent);margin:4px auto 0;border-radius:1px}
+.bc-block:last-child .bc-num-line{display:none}
+.bc-body{flex:1;background:var(--navy2);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:12px 16px;margin-bottom:10px}
+.bc-body h4{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--gold);margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.bc-body p{font-size:12px;color:var(--muted);line-height:1.5}
+.bc-hash{font-size:10px;font-family:'Syne',sans-serif;color:rgba(245,158,11,.6);letter-spacing:.05em;margin-top:6px;background:rgba(245,158,11,.06);border-radius:4px;padding:3px 8px;display:inline-block}
+.bc-right{display:flex;flex-direction:column;gap:14px}
+.icp-panel{background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.03));border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:20px}
+.icp-panel h3{font-family:'Syne',sans-serif;font-size:16px;font-weight:800;color:var(--gold);margin-bottom:14px}
+.icp-row{display:flex;align-items:flex-start;gap:10px;margin-bottom:12px;font-size:13px}
+.icp-row i{color:var(--gold);width:16px;margin-top:2px;flex-shrink:0}
+.verify-box{background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:16px}
+.verify-box h4{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;color:var(--muted);margin-bottom:10px;letter-spacing:.05em}
+.hash-demo{font-family:'Syne',sans-serif;font-size:10px;color:rgba(245,158,11,.7);background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.15);border-radius:6px;padding:8px 10px;word-break:break-all;letter-spacing:.04em;margin-bottom:8px}
+.verify-box p{font-size:12px;color:var(--muted);line-height:1.6}
+
+/* ── SLIDE 11 — SECURITY ── */
+.sec-layout{display:grid;grid-template-columns:1fr 1fr;gap:20px;flex:1}
+.sec-col{display:flex;flex-direction:column;gap:10px}
+.sec-item{display:flex;align-items:flex-start;gap:12px;background:var(--navy2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.sec-item .icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.sec-item h4{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:3px}
+.sec-item p{font-size:12px;color:var(--muted);line-height:1.5}
+.bc-final{grid-column:1/-1;background:linear-gradient(135deg,rgba(245,158,11,.12),rgba(245,158,11,.04));border:1px solid rgba(245,158,11,.35);border-radius:12px;padding:18px 22px;display:flex;align-items:center;gap:16px}
+.bc-final i{color:var(--gold);font-size:28px;flex-shrink:0}
+.bc-final p{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1.6;color:var(--gold)}
+.bc-final span{font-size:12px;color:var(--muted);font-weight:400;display:block;margin-top:4px}
+
+/* ── SLIDE 12 — TESTING ── */
+.test-layout{display:grid;grid-template-columns:1.2fr 1fr;gap:24px;flex:1}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{text-align:left;padding:10px 14px;font-family:'Syne',sans-serif;font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);text-transform:uppercase}
+td{padding:11px 14px;border-bottom:1px solid rgba(255,255,255,.04);color:var(--text)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(30,95,168,.07)}
+td.val{font-family:'Syne',sans-serif;font-weight:700;color:var(--gold)}
+td.max{font-size:12px;color:var(--muted)}
+.sec-checks{display:flex;flex-direction:column;gap:10px}
+.sec-check{display:flex;align-items:center;gap:12px;background:var(--navy2);border:1px solid var(--border);border-radius:9px;padding:12px 16px;font-size:13px}
+.sec-check .tick{color:var(--green);font-size:16px;width:20px;flex-shrink:0}
+
+/* ── SLIDE 13 — CONCLUSION ── */
+#s13{background:radial-gradient(ellipse at 30% 60%,rgba(30,95,168,.15) 0%,transparent 50%),radial-gradient(ellipse at 70% 30%,rgba(245,158,11,.08) 0%,transparent 50%),var(--navy)}
+.conc-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1}
+.conc-col{display:flex;flex-direction:column;gap:10px}
+.prob-sol{display:flex;align-items:flex-start;gap:12px;font-size:13px;line-height:1.5}
+.prob-sol i.p{color:var(--red);flex-shrink:0;margin-top:2px}
+.prob-sol i.s{color:var(--green);flex-shrink:0;margin-top:2px}
+.quote-box{grid-column:1/-1;background:linear-gradient(135deg,rgba(30,95,168,.15),rgba(30,95,168,.05));border-left:3px solid var(--gold);border-radius:0 12px 12px 0;padding:18px 24px}
+.quote-box blockquote{font-family:'Syne',sans-serif;font-size:14px;font-weight:600;line-height:1.7;color:var(--text);font-style:italic}
+.quote-box cite{font-size:12px;color:var(--muted);margin-top:8px;display:block}
+.vision-col{grid-column:1/-1;display:flex;gap:14px;flex-wrap:wrap}
+.vision-chip{background:var(--navy2);border:1px solid var(--border);border-radius:8px;padding:10px 16px;font-size:12px;display:flex;align-items:center;gap:8px;flex:1;min-width:200px}
+.vision-chip i{color:var(--blue)}
+.thank-you{grid-column:1/-1;text-align:center;padding:20px}
+.thank-you h2{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;color:var(--gold);letter-spacing:-.02em}
+.thank-you p{color:var(--muted);font-size:14px;margin-top:8px}
+
+/* ── CANVAS ANIMATION (slide 1) ── */
+canvas#stars{position:absolute;inset:0;z-index:0}
+
+/* ── SLIDE 14 — VERIFY ── */
+#s14{background:radial-gradient(ellipse at 60% 30%,rgba(245,158,11,.10) 0%,transparent 55%),var(--navy)}
+.verify-layout{display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;align-content:start}
+.verify-code-demo{background:var(--navy2);border:1px solid rgba(245,158,11,.4);border-radius:12px;padding:20px 22px;text-align:center;glow-gold:true}
+.verify-code-demo .code-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gold);margin-bottom:8px}
+.verify-code-demo .code-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;letter-spacing:.2em;color:#fcd34d;margin-bottom:8px;font-variant-numeric:tabular-nums}
+.verify-result{border-radius:10px;padding:14px 18px;margin-bottom:10px}
+.verify-result.intact{background:rgba(16,185,129,.08);border:1px solid rgba(16,185,129,.3)}
+.verify-result.tampered{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.3)}
+.verify-result h4{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;margin-bottom:4px}
+.verify-result.intact h4{color:#34d399}
+.verify-result.tampered h4{color:#f87171}
+.verify-result p{font-size:12px;color:var(--muted);line-height:1.5}
+.wdog-badge{display:flex;align-items:flex-start;gap:10px;background:rgba(30,95,168,.1);border:1px solid rgba(30,95,168,.25);border-radius:9px;padding:12px 16px;font-size:12px;line-height:1.6}
+.wdog-badge i{color:var(--blue);font-size:14px;margin-top:2px;flex-shrink:0}
+
+/* ── MOBILE RESPONSIVE ── */
+@media(max-width:900px){
+  html,body{overflow:auto}
+  .deck{height:auto;min-height:100vh}
+  .slide{position:relative;display:none;animation:none;height:auto;min-height:100vh}
+  .slide.active{display:flex}
+  .slide-inner{padding:24px 24px 90px;overflow-y:auto}
+  #s1 .content{padding:40px 24px 80px}
+  #s1 .icp-badge{position:static;margin:20px auto 0;width:fit-content}
+  #s1 h1{font-size:clamp(36px,8vw,64px)}
+
+  /* Stack all grids to 1 col on small screens */
+  .prob-grid,
+  .obj-layout,
+  .arch-layout,
+  .bc-layout,
+  .screen-layout,
+  .bio-layout,
+  .iv-layout,
+  .conc-layout,
+  .sec-layout,
+  .test-layout,
+  .verify-layout{grid-template-columns:1fr!important;flex-direction:column}
+  .arch-right{width:100%}
+  .arch-layout{flex-direction:column}
+  .prob-grid{grid-template-columns:1fr 1fr!important}
+  .ac-grid{grid-template-columns:1fr 1fr!important}
+  .bc-milestones,.bc-right{width:100%}
+  .gen-obj{grid-column:1!important}
+  .spec-list,.pipeline-mini,.quote-box,.vision-col,.thank-you,.bc-final{grid-column:1!important}
+
+  .slide-title{font-size:clamp(20px,4vw,28px)}
+  .slide-sub{font-size:13px}
+  .nav{padding:0 16px}
+  .progress-bar{bottom:52px}
+  table{font-size:12px}
+  th,td{padding:8px 10px}
+}
+@media(max-width:540px){
+  .prob-grid{grid-template-columns:1fr!important}
+  .ac-grid{grid-template-columns:1fr!important}
+  .pipeline-big{gap:0}
+  .pip-body{flex-direction:column;align-items:flex-start;gap:6px}
+  .slide-title{font-size:clamp(18px,5vw,24px)!important}
+  #s1 h1{font-size:clamp(30px,9vw,48px)}
+}
+</style>
+</head>
+<body>
+<div class="deck" id="deck">
+
+<!-- ══════════════════════════════════════════
+     SLIDE 1 — TITLE
+═══════════════════════════════════════════ -->
+<div class="slide active" id="s1">
+  <canvas id="stars"></canvas>
+  <div class="content">
+    <div class="logo-chip"><i class="fa-solid fa-link-slash"></i> RP-TUMBA · JUNE 2026</div>
+    <h1>Recruit<span>Chain</span></h1>
+    <div style="font-family:'Syne',sans-serif;font-size:clamp(14px,1.6vw,20px);color:var(--muted);font-weight:500;margin-bottom:18px;">Blockchain-Based AI Smart Recruitment System</div>
+    <div class="byline">
+      <strong>Author:</strong> MBARUSHIMANA Danny &nbsp;|&nbsp; Reg: 25RP20201<br>
+      <strong>Supervisor:</strong> BAMPIRE Delphine<br>
+      <strong>Institution:</strong> RP-Tumba College of Technology
+    </div>
+    <div class="badges">
+      <div class="badge"><i class="fa-brands fa-php"></i> PHP 8 + MySQL</div>
+      <div class="badge"><i class="fa-solid fa-brain"></i> AI FastAPI</div>
+      <div class="badge"><i class="fa-solid fa-shield-halved"></i> Anti-Cheat</div>
+      <div class="badge" style="color:var(--gold);border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.08)"><i class="fa-solid fa-cubes" style="color:var(--gold)"></i> ICP Blockchain</div>
+    </div>
+  </div>
+  <div class="icp-badge glow-gold">
+    <div class="hex">⛓</div>
+    <p>ICP Canister</p>
+    <span>t63gs-up777…cai</span>
+    <div style="margin-top:12px;border-top:1px solid var(--border);padding-top:10px">
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px"><i class="fa-solid fa-circle-check" style="color:var(--green)"></i> Immutable Records</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:4px"><i class="fa-solid fa-circle-check" style="color:var(--green)"></i> No Gas Fees</div>
+      <div style="font-size:11px;color:var(--muted)"><i class="fa-solid fa-circle-check" style="color:var(--green)"></i> 320ms Write Avg</div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 2 — THE PROBLEM
+═══════════════════════════════════════════ -->
+<div class="slide" id="s2">
+  <div class="slide-inner">
+    <div class="slide-tag">The Problem</div>
+    <div class="slide-title">Why Traditional Recruitment Is Broken</div>
+    <div class="slide-sub">Five interconnected failures that compound into bad hires, wasted budgets, and eroded institutional trust.</div>
+    <div class="prob-grid" style="flex:1">
+      <div class="prob-card">
+        <div class="prob-icon" style="background:rgba(239,68,68,.12);color:#f87171"><i class="fa-solid fa-user-ninja"></i></div>
+        <h3>Examination Fraud</h3>
+        <p>Candidates use external resources, collaboration, or screen-sharing during online exams with no meaningful supervision in place.</p>
+        <div style="font-size:11px;color:#f87171;font-weight:600"><i class="fa-solid fa-arrow-up"></i> Inflated scores, underqualified hires</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon" style="background:rgba(245,158,11,.12);color:#fcd34d"><i class="fa-solid fa-file-circle-xmark"></i></div>
+        <h3>Credential Dishonesty</h3>
+        <p>Fabricated degrees, inflated job titles, and falsified certificates are submitted with no verification mechanism.</p>
+        <div style="font-size:11px;color:#fcd34d;font-weight:600"><i class="fa-solid fa-arrow-up"></i> Unqualified candidates pass screening</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon" style="background:rgba(168,85,247,.12);color:#c084fc"><i class="fa-solid fa-database"></i></div>
+        <h3>Result Tampering</h3>
+        <p>Digital records stored only in SQL databases can be silently modified by insiders — no audit trail exists to detect manipulation.</p>
+        <div style="font-size:11px;color:#c084fc;font-weight:600"><i class="fa-solid fa-arrow-up"></i> Recruitment decisions are not trustworthy</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon" style="background:rgba(20,184,166,.12);color:#2dd4bf"><i class="fa-solid fa-eye-slash"></i></div>
+        <h3>Behavioral Blindness</h3>
+        <p>Conventional systems capture only final answers — no insight into reasoning process, hesitation patterns, or real-time behavior.</p>
+        <div style="font-size:11px;color:#2dd4bf;font-weight:600"><i class="fa-solid fa-arrow-up"></i> Character and integrity go unmeasured</div>
+      </div>
+      <div class="prob-card">
+        <div class="prob-icon" style="background:rgba(59,130,246,.12);color:#93c5fd"><i class="fa-solid fa-hourglass-half"></i></div>
+        <h3>Operational Inefficiency</h3>
+        <p>Manual CV reviews, email-based scheduling, and spreadsheet tracking consume weeks of HR time per vacancy.</p>
+        <div style="font-size:11px;color:#93c5fd;font-weight:600"><i class="fa-solid fa-arrow-up"></i> Slow time-to-hire, poor candidate experience</div>
+      </div>
+    </div>
+    <div class="bottom-note">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      These five problems compound: a cheated exam + falsified credentials + tampered results = a hired candidate who should never have made it past screening.
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 3 — OBJECTIVES
+═══════════════════════════════════════════ -->
+<div class="slide" id="s3">
+  <div class="slide-inner">
+    <div class="slide-tag">Research Objectives</div>
+    <div class="slide-title">What RecruitChain Sets Out To Do</div>
+    <div class="divider"></div>
+    <div style="display:flex;flex-direction:column;gap:10px;flex:1">
+      <div class="gen-obj">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.1em;color:var(--gold);margin-bottom:6px;text-transform:uppercase">General Objective</div>
+        <p>Design, develop, and evaluate a Blockchain-Based AI Smart Recruitment System that guarantees integrity, automates screening, and produces verifiable, tamper-proof hiring records on the Internet Computer Protocol (ICP) blockchain.</p>
+      </div>
+      <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-top:4px">Specific Objectives</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:1">
+        <div class="spec-item"><div class="spec-num">1</div><p><strong style="color:var(--text)">AI CV Screening</strong> — LLM-powered contextual evaluation of candidate profiles across 7 dimensions with multi-dimensional scoring</p></div>
+        <div class="spec-item"><div class="spec-num">2</div><p><strong style="color:var(--text)">Multi-Layer Proctoring</strong> — Real-time anti-cheat WebSocket with face detection, gaze tracking, voice monitoring, and external display blocking</p></div>
+        <div class="spec-item"><div class="spec-num">3</div><p><strong style="color:var(--text)">Biometric Verification</strong> — Browser-based face descriptor matching at exam entry using 128-dimensional embeddings</p></div>
+        <div class="spec-item"><div class="spec-num">4</div><p><strong style="color:var(--text)">AI Interview Conductor</strong> — Adaptive question generation, 5-dimension behavioral evaluation, confidence and anomaly scoring</p></div>
+        <div class="spec-item"><div class="spec-num">5</div><p><strong style="color:var(--text)">ICP Blockchain Anchoring</strong> — Six immutable milestones written to the ICP canister with SHA-256 hash verification</p></div>
+        <div class="spec-item"><div class="spec-num">6</div><p><strong style="color:var(--text)">Hiring Reports</strong> — Company-facing dashboards with ranked candidates, audit logs, and blockchain-verified decision records</p></div>
+        <div class="spec-item" style="grid-column:1/-1"><div class="spec-num">7</div><p><strong style="color:var(--text)">Security Testing</strong> — Validate SQL injection prevention, CSRF protection, AES-256 encryption, and anti-cheat detection accuracy</p></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 4 — ARCHITECTURE
+═══════════════════════════════════════════ -->
+<div class="slide" id="s4">
+  <div class="slide-inner">
+    <div class="slide-tag">System Architecture</div>
+    <div class="slide-title">Five-Service Distributed Architecture</div>
+    <div class="slide-sub">Each service is independently scalable and communicates via HTTP/WebSocket. The ICP gateway is the bridge to the blockchain.</div>
+    <div class="arch-layout">
+      <div class="arch-services">
+        <div class="svc-card">
+          <div class="svc-icon" style="background:rgba(30,95,168,.15);color:#93c5fd"><i class="fa-solid fa-globe"></i></div>
+          <div class="svc-info">
+            <h4>PHP Web Application</h4>
+            <p>Main UI · Auth · CRUD · Session management · PDF reports · Admin dashboard · Tailwind CSS + Alpine.js</p>
+          </div>
+          <div class="svc-port">:80 / :443</div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-icon" style="background:rgba(16,185,129,.12);color:#34d399"><i class="fa-solid fa-brain"></i></div>
+          <div class="svc-info">
+            <h4>AI Service — FastAPI (Python)</h4>
+            <p>CV screening · Interview questions · Open-answer scoring · Behavioral analysis · LLM integration</p>
+          </div>
+          <div class="svc-port">:8001</div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-icon" style="background:rgba(239,68,68,.12);color:#f87171"><i class="fa-solid fa-shield-halved"></i></div>
+          <div class="svc-info">
+            <h4>Anti-Cheat Service — FastAPI + WebSocket</h4>
+            <p>Real-time proctoring events · Face detection · Voice analysis · Gaze tracking · Violation scoring</p>
+          </div>
+          <div class="svc-port">:8002</div>
+        </div>
+        <div class="svc-card" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
+          <div class="svc-icon" style="background:rgba(245,158,11,.15);color:var(--gold)"><i class="fa-solid fa-link"></i></div>
+          <div class="svc-info">
+            <h4>ICP Gateway — Node.js</h4>
+            <p>Blockchain bridge · Actor.createActor · 20+ canister methods · Candid IDL · Async queue writes</p>
+          </div>
+          <div class="svc-port" style="color:var(--gold)">:3001</div>
+        </div>
+        <div class="svc-card">
+          <div class="svc-icon" style="background:rgba(168,85,247,.12);color:#c084fc"><i class="fa-solid fa-database"></i></div>
+          <div class="svc-info">
+            <h4>MySQL Database</h4>
+            <p>Users · Jobs · Applications · Exam sessions · Interviews · Offers · All persistent data</p>
+          </div>
+          <div class="svc-port">:3334</div>
+        </div>
+      </div>
+      <div class="arch-right">
+        <div class="arch-diagram" style="flex:1">
+          <h4>REQUEST FLOW</h4>
+          <div class="flow-box" style="background:rgba(30,95,168,.15);border-color:rgba(30,95,168,.3);color:#93c5fd">Browser (Candidate / Company)</div>
+          <div class="flow-down"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="flow-box">PHP Web App (:80)</div>
+          <div class="flow-down"><i class="fa-solid fa-arrow-down"></i></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+            <div class="flow-box" style="font-size:11px;padding:6px 8px;background:rgba(16,185,129,.08);border-color:rgba(16,185,129,.2);color:#34d399">AI Service<br>:8001</div>
+            <div class="flow-box" style="font-size:11px;padding:6px 8px;background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.2);color:var(--gold)">ICP Gateway<br>:3001</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px">
+            <div class="flow-box" style="font-size:11px;padding:6px 8px;background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.2);color:#f87171">Anti-Cheat<br>WS :8002</div>
+            <div class="flow-box" style="font-size:11px;padding:6px 8px;background:rgba(168,85,247,.08);border-color:rgba(168,85,247,.2);color:#c084fc">MySQL<br>:3334</div>
+          </div>
+          <div class="flow-down"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="chain-box glow-gold">
+            <i class="fa-solid fa-cubes"></i>
+            <p>ICP Blockchain Canister</p>
+            <span>t63gs-up777-77776-aaaba-cai</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 5 — PIPELINE
+═══════════════════════════════════════════ -->
+<div class="slide" id="s5">
+  <div class="slide-inner">
+    <div class="slide-tag">Recruitment Pipeline</div>
+    <div class="slide-title">End-to-End Candidate Journey</div>
+    <div class="slide-sub">Every stage is gated — candidates cannot advance without completing the prior step. Blockchain anchors <span style="color:var(--gold)">⛓</span> mark immutable milestones.</div>
+    <div class="pipeline-big">
+      <div class="pip-stage">
+        <div class="pip-dot" style="background:rgba(30,95,168,.15);color:#93c5fd"><i class="fa-solid fa-paper-plane"></i></div>
+        <div class="pip-body">
+          <div><h4>APPLIED</h4><p>Candidate submits CV and profile — triggers AI screening queue</p></div>
+          <div class="pip-chain"><i class="fa-solid fa-cubes"></i> Blockchain anchor: application CV hash + timestamp</div>
+        </div>
+      </div>
+      <div class="pip-stage">
+        <div class="pip-dot" style="background:rgba(16,185,129,.1);color:#34d399"><i class="fa-solid fa-robot"></i></div>
+        <div class="pip-body">
+          <div><h4>SCREENED</h4><p>AI evaluates 7 profile dimensions · generates screening report · ranks against job requirements</p></div>
+          <div class="pip-action">Company reviews AI report → Invites or rejects</div>
+        </div>
+      </div>
+      <div class="pip-stage">
+        <div class="pip-dot" style="background:rgba(245,158,11,.1);color:var(--gold)"><i class="fa-solid fa-envelope-open-text"></i></div>
+        <div class="pip-body">
+          <div><h4>EXAM INVITED</h4><p>System schedules exam · AES-256-CBC encrypted questions generated · face enrollment required</p></div>
+          <div class="pip-action">External display blocks entry. Face verify before start.</div>
+        </div>
+      </div>
+      <div class="pip-stage">
+        <div class="pip-dot" style="background:rgba(239,68,68,.1);color:#f87171"><i class="fa-solid fa-clipboard-check"></i></div>
+        <div class="pip-body">
+          <div><h4>EXAM DONE</h4><p>Multi-layer anti-cheat proctoring · AI scores open answers · cheat_score computed</p></div>
+          <div class="pip-chain"><i class="fa-solid fa-cubes"></i> Blockchain: score + anti-cheat SHA-256 hash</div>
+        </div>
+      </div>
+      <div class="pip-stage">
+        <div class="pip-dot" style="background:rgba(168,85,247,.1);color:#c084fc"><i class="fa-solid fa-microphone-lines"></i></div>
+        <div class="pip-body">
+          <div><h4>INTERVIEW DONE</h4><p>AI conducts structured interview · 5-dimension behavioral evaluation · transcript generated</p></div>
+          <div class="pip-chain"><i class="fa-solid fa-cubes"></i> Blockchain: interview score + transcript SHA-256</div>
+        </div>
+      </div>
+      <div class="pip-stage">
+        <div class="pip-dot" style="background:linear-gradient(135deg,rgba(245,158,11,.2),rgba(16,185,129,.1));color:var(--gold)"><i class="fa-solid fa-trophy"></i></div>
+        <div class="pip-body" style="border-color:rgba(245,158,11,.3)">
+          <div><h4>SELECTED / REJECTED</h4><p>Company declares winners · offer letters generated · candidate notified</p></div>
+          <div class="pip-chain"><i class="fa-solid fa-cubes"></i> Blockchain: hiring decision — winner IDs hash + decided_at</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 6 — AI SCREENING
+═══════════════════════════════════════════ -->
+<div class="slide" id="s6">
+  <div class="slide-inner">
+    <div class="slide-tag">AI-Powered Screening</div>
+    <div class="slide-title">Beyond Keywords — Contextual CV Intelligence</div>
+    <div class="slide-sub">The AI service evaluates candidates the way a senior recruiter would — holistically, not just by keyword matches.</div>
+    <div class="screen-layout">
+      <div class="screen-col">
+        <div class="old-card">
+          <h4><i class="fa-solid fa-times-circle"></i> Traditional Keyword Matching</h4>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)">
+            <div><i class="fa-solid fa-xmark" style="color:#f87171;margin-right:6px"></i>Misses semantically equivalent terms</div>
+            <div><i class="fa-solid fa-xmark" style="color:#f87171;margin-right:6px"></i>Cannot evaluate quality of experience</div>
+            <div><i class="fa-solid fa-xmark" style="color:#f87171;margin-right:6px"></i>No credential verification</div>
+            <div><i class="fa-solid fa-xmark" style="color:#f87171;margin-right:6px"></i>Biased toward specific phrasing</div>
+            <div><i class="fa-solid fa-xmark" style="color:#f87171;margin-right:6px"></i>Cannot rank candidates holistically</div>
+          </div>
+        </div>
+        <div class="new-card">
+          <h4><i class="fa-solid fa-check-circle"></i> RecruitChain AI Evaluation</h4>
+          <div style="display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--muted)">
+            <div><i class="fa-solid fa-check" style="color:#34d399;margin-right:6px"></i>LLM reads and understands full profile context</div>
+            <div><i class="fa-solid fa-check" style="color:#34d399;margin-right:6px"></i>7 structured profile dimensions evaluated</div>
+            <div><i class="fa-solid fa-check" style="color:#34d399;margin-right:6px"></i>4 numeric scores (0–10) per dimension</div>
+            <div><i class="fa-solid fa-check" style="color:#34d399;margin-right:6px"></i>Consistent criteria — no interviewer bias</div>
+            <div><i class="fa-solid fa-check" style="color:#34d399;margin-right:6px"></i>JSON-structured for full auditability</div>
+          </div>
+        </div>
+        <div class="stat-chips">
+          <div class="stat-chip"><div class="val">2.4s</div><div class="lbl">Per candidate avg</div></div>
+          <div class="stat-chip"><div class="val">8.1s</div><div class="lbl">Batch of 10</div></div>
+          <div class="stat-chip"><div class="val">7</div><div class="lbl">Profile dimensions</div></div>
+        </div>
+      </div>
+      <div class="screen-col">
+        <div class="card">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Profile Dimensions Evaluated</div>
+          <div style="display:flex;flex-direction:column;gap:8px;font-size:13px;margin-bottom:16px">
+            <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--blue);flex-shrink:0"></div>Education & Academic Qualifications</div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#8b5cf6;flex-shrink:0"></div>Work Experience & Relevance</div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0"></div>Certificates & Licences</div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:var(--gold);flex-shrink:0"></div>Language Proficiency</div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#ec4899;flex-shrink:0"></div>Referee Quality & Count</div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#14b8a6;flex-shrink:0"></div>Publications & Research</div>
+            <div style="display:flex;align-items:center;gap:8px"><div style="width:8px;height:8px;border-radius:50%;background:#f97316;flex-shrink:0"></div>Disability / Inclusive Indicators</div>
+          </div>
+          <div style="font-size:12px;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:10px">AI Scoring Output (0–10)</div>
+          <div class="dim-list">
+            <div class="dim-row"><div class="dim-label">Skills Match Score</div><div class="dim-bar"><div class="dim-fill" style="width:88%"></div></div><div style="font-size:11px;color:var(--muted);width:28px">8.8</div></div>
+            <div class="dim-row"><div class="dim-label">Experience Score</div><div class="dim-bar"><div class="dim-fill" style="width:75%"></div></div><div style="font-size:11px;color:var(--muted);width:28px">7.5</div></div>
+            <div class="dim-row"><div class="dim-label">Education Score</div><div class="dim-bar"><div class="dim-fill" style="width:90%"></div></div><div style="font-size:11px;color:var(--muted);width:28px">9.0</div></div>
+            <div class="dim-row"><div class="dim-label">Credentials Score</div><div class="dim-bar"><div class="dim-fill" style="width:60%"></div></div><div style="font-size:11px;color:var(--muted);width:28px">6.0</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 7 — ANTI-CHEAT
+═══════════════════════════════════════════ -->
+<div class="slide" id="s7">
+  <div class="slide-inner">
+    <div class="slide-tag">Proctoring System</div>
+    <div class="slide-title">Multi-Layer Real-Time Anti-Cheat</div>
+    <div class="slide-sub">Seven detection layers operate simultaneously via WebSocket. Any critical violation triggers immediate termination. External display blocks exam entry entirely.</div>
+    <div class="ac-grid">
+      <div class="ac-card">
+        <div class="icon" style="color:#f87171">🪟</div>
+        <h4>Tab Switch / Window Blur</h4>
+        <p>Page Visibility API + window blur event. Fires the moment candidate leaves the exam window.</p>
+        <div class="weight w-high">HIGH weight</div>
+      </div>
+      <div class="ac-card">
+        <div class="icon" style="color:var(--gold)">👁️</div>
+        <h4>Face Not Detected</h4>
+        <p>face-api.js SsdMobilenetv1 checks for face presence every 2s. No face = violation logged.</p>
+        <div class="weight w-med">MEDIUM weight</div>
+      </div>
+      <div class="ac-card">
+        <div class="icon" style="color:#f87171">👥</div>
+        <h4>Multiple Faces</h4>
+        <p>More than one face in frame indicates unauthorized assistance. Immediate high-severity flag.</p>
+        <div class="weight w-high">HIGH weight</div>
+      </div>
+      <div class="ac-card">
+        <div class="icon" style="color:var(--gold)">👀</div>
+        <h4>Gaze Off Screen</h4>
+        <p>Head pose estimation detects sustained off-screen gaze — candidate reading from external source.</p>
+        <div class="weight w-med">MEDIUM weight</div>
+      </div>
+      <div class="ac-card">
+        <div class="icon" style="color:var(--gold)">🔊</div>
+        <h4>Voice Detected</h4>
+        <p>WebRTC audio analysis flags ambient speech above threshold — indicates dictation or collaboration.</p>
+        <div class="weight w-med">MEDIUM weight</div>
+      </div>
+      <div class="ac-card">
+        <div class="icon" style="color:#f87171">📹</div>
+        <h4>Screen Recording</h4>
+        <p>getDisplayMedia API detects if candidate is capturing and sharing their screen with another party.</p>
+        <div class="weight w-high">HIGH weight</div>
+      </div>
+      <div class="ac-card" style="border-color:rgba(16,185,129,.35);background:rgba(16,185,129,.05)">
+        <div class="icon">📺</div>
+        <h4>External Display</h4>
+        <p>screen.isExtended + getScreenDetails() detects HDMI/projector connection. Entry is BLOCKED entirely — candidate cannot start the exam.</p>
+        <div class="weight w-block">BLOCKS ENTRY</div>
+      </div>
+      <div class="ws-note">
+        <i class="fa-solid fa-plug-circle-bolt" style="color:var(--blue)"></i>
+        <span>All events stream over <strong>WebSocket (:8002)</strong> — &lt;50ms latency average. Two warnings trigger auto-submission. Session is terminated on critical violations. Anti-cheat data is SHA-256 hashed and written to the ICP blockchain.</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 8 — BIOMETRIC
+═══════════════════════════════════════════ -->
+<div class="slide" id="s8">
+  <div class="slide-inner">
+    <div class="slide-tag">Identity Assurance</div>
+    <div class="slide-title">Biometric Face Verification at Exam Entry</div>
+    <div class="slide-sub">Prevents identity fraud — only the registered candidate can take the exam. Processing runs entirely in the browser; no raw images are transmitted.</div>
+    <div class="bio-layout">
+      <div>
+        <div class="bio-phase" style="margin-bottom:14px">
+          <h3 style="color:var(--blue)"><i class="fa-solid fa-user-plus"></i> Enrollment Phase (Profile Setup)</h3>
+          <div class="bio-step"><div class="bio-num">1</div><div>Camera activated — candidate shows face to 5 different angles</div></div>
+          <div class="bio-step"><div class="bio-num">2</div><div>face-api.js SsdMobilenetv1 detects face and computes <strong>128-dimensional descriptor vector</strong> for each frame</div></div>
+          <div class="bio-step"><div class="bio-num">3</div><div>5 descriptors averaged → stored in database as reference embedding</div></div>
+        </div>
+        <div class="bio-phase">
+          <h3 style="color:var(--green)"><i class="fa-solid fa-fingerprint"></i> Verification Phase (Exam Entry)</h3>
+          <div class="bio-step"><div class="bio-num">1</div><div>Live webcam frame captured → 128-dim descriptor computed</div></div>
+          <div class="bio-step"><div class="bio-num">2</div><div><strong>Euclidean distance</strong> computed between live descriptor and stored reference</div></div>
+          <div class="bio-step"><div class="bio-num">3</div><div>Distance &lt; 0.45 threshold → <span style="color:var(--green);font-weight:700">MATCH</span> (exam proceeds). Distance ≥ 0.45 → <span style="color:var(--red);font-weight:700">REJECTED</span></div></div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Test Results</div>
+          <div class="test-results">
+            <div class="test-row" style="background:rgba(16,185,129,.05);border:1px solid rgba(16,185,129,.15)">
+              <span>Same person (5 frames)</span>
+              <span>Distance: 0.12–0.39</span>
+              <span class="pass">MATCH ✓</span>
+            </div>
+            <div class="test-row" style="background:rgba(239,68,68,.05);border:1px solid rgba(239,68,68,.15)">
+              <span>Different person</span>
+              <span>Distance: 0.51–0.93</span>
+              <span class="fail">REJECTED ✓</span>
+            </div>
+            <div class="test-row">
+              <span>Test set size</span>
+              <span>10 individuals × 5 frames</span>
+              <span style="color:var(--green);font-weight:700">0 false accepts</span>
+            </div>
+            <div class="test-row">
+              <span>Processing time</span>
+              <span>265ms avg · 440ms max</span>
+              <span style="color:var(--gold);font-weight:700">In-browser ✓</span>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div style="font-size:12px;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.07em">128-Dim Embedding Space</div>
+          <div class="embed-vis">
+            <div class="dots" id="embeddingVis"></div>
+            <div style="position:absolute;bottom:8px;right:12px;font-size:10px;color:var(--muted)">Each dot = one face descriptor</div>
+          </div>
+        </div>
+        <div class="card" style="background:rgba(30,95,168,.07);border-color:rgba(30,95,168,.2)">
+          <div style="font-size:13px;color:var(--text)"><i class="fa-solid fa-lock" style="color:var(--blue);margin-right:8px"></i><strong>Privacy by Design:</strong> Raw camera frames are never sent to the server. Only the numeric descriptor array is stored. No biometric images are retained after enrollment.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 9 — AI INTERVIEW
+═══════════════════════════════════════════ -->
+<div class="slide" id="s9">
+  <div class="slide-inner">
+    <div class="slide-tag">AI Interview Module</div>
+    <div class="slide-title">AI-Conducted Structured Interviews</div>
+    <div class="slide-sub">Every candidate faces identical criteria — the AI conducts the interview with adaptive follow-up questions and 5-dimension behavioral scoring.</div>
+    <div class="iv-layout">
+      <div>
+        <div class="iv-flow">
+          <div class="iv-step">
+            <div class="iv-step-icon" style="background:rgba(30,95,168,.15);color:#93c5fd"><i class="fa-solid fa-dumbbell"></i></div>
+            <div><h4>Practice Session (2 min)</h4><p>Non-evaluated warmup so candidate can test mic, camera, and speech-to-text</p></div>
+          </div>
+          <div class="iv-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="iv-step">
+            <div class="iv-step-icon" style="background:rgba(239,68,68,.1);color:#f87171"><i class="fa-solid fa-expand"></i></div>
+            <div><h4>Fullscreen Lock + Face Verify</h4><p>Mandatory fullscreen enforced. Face verification repeated before interview begins.</p></div>
+          </div>
+          <div class="iv-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="iv-step">
+            <div class="iv-step-icon" style="background:rgba(16,185,129,.1);color:#34d399"><i class="fa-solid fa-comments"></i></div>
+            <div><h4>Adaptive Questions (up to 8)</h4><p>LLM generates role-specific questions. Follow-ups adapt based on previous answers. 1.8s average generation.</p></div>
+          </div>
+          <div class="iv-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="iv-step">
+            <div class="iv-step-icon" style="background:rgba(245,158,11,.1);color:var(--gold)"><i class="fa-solid fa-chart-radar"></i></div>
+            <div><h4>Behavioral Analytics</h4><p>Answer length, response latency, hesitation patterns, vocabulary complexity all measured</p></div>
+          </div>
+          <div class="iv-arrow"><i class="fa-solid fa-arrow-down"></i></div>
+          <div class="iv-step" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.04)">
+            <div class="iv-step-icon" style="background:rgba(245,158,11,.15);color:var(--gold)"><i class="fa-solid fa-cubes"></i></div>
+            <div><h4>ICP Blockchain Record</h4><p>Score + transcript SHA-256 hash written to canister. Tamper-proof audit trail created.</p></div>
+          </div>
+        </div>
+      </div>
+      <div class="spider-wrap">
+        <div class="card" style="flex:1">
+          <div class="spider-label">5-DIMENSION EVALUATION SCORES</div>
+          <div class="dim-bars">
+            <div class="dim-bar-row">
+              <div class="dim-name">Technical Knowledge</div>
+              <div class="dim-bar-outer"><div class="dim-bar-inner" style="width:85%;background:linear-gradient(90deg,var(--blue),var(--blue2))"></div></div>
+              <div style="font-size:11px;color:var(--muted);width:30px">8.5</div>
+            </div>
+            <div class="dim-bar-row">
+              <div class="dim-name">Communication</div>
+              <div class="dim-bar-outer"><div class="dim-bar-inner" style="width:78%;background:linear-gradient(90deg,#8b5cf6,#a78bfa)"></div></div>
+              <div style="font-size:11px;color:var(--muted);width:30px">7.8</div>
+            </div>
+            <div class="dim-bar-row">
+              <div class="dim-name">Behavioral Indicators</div>
+              <div class="dim-bar-outer"><div class="dim-bar-inner" style="width:72%;background:linear-gradient(90deg,var(--green),#34d399)"></div></div>
+              <div style="font-size:11px;color:var(--muted);width:30px">7.2</div>
+            </div>
+            <div class="dim-bar-row">
+              <div class="dim-name">Problem Solving</div>
+              <div class="dim-bar-outer"><div class="dim-bar-inner" style="width:90%;background:linear-gradient(90deg,var(--gold),#fcd34d)"></div></div>
+              <div style="font-size:11px;color:var(--muted);width:30px">9.0</div>
+            </div>
+            <div class="dim-bar-row">
+              <div class="dim-name">Professionalism</div>
+              <div class="dim-bar-outer"><div class="dim-bar-inner" style="width:82%;background:linear-gradient(90deg,#ec4899,#f472b6)"></div></div>
+              <div style="font-size:11px;color:var(--muted);width:30px">8.2</div>
+            </div>
+          </div>
+        </div>
+        <div class="iv-stats">
+          <div class="iv-stat"><div class="v">1.8s</div><div class="l">Question generation avg</div></div>
+          <div class="iv-stat"><div class="v">≤8</div><div class="l">Adaptive questions max</div></div>
+        </div>
+        <div class="card" style="background:rgba(30,95,168,.07);border-color:rgba(30,95,168,.2)">
+          <div style="font-size:13px;color:var(--text)">Plus: <strong style="color:var(--gold)">Confidence Score</strong> (speech pattern analysis) · <strong style="color:var(--red)">Anomaly Score</strong> (integrity indicator) · <strong style="color:var(--green)">Attention Score</strong> (focus level throughout interview)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 10 — BLOCKCHAIN (MAIN EMPHASIS)
+═══════════════════════════════════════════ -->
+<div class="slide" id="s10">
+  <div class="slide-inner">
+    <div class="slide-tag" style="color:var(--gold)">⛓ Blockchain Layer — Main Differentiator</div>
+    <div class="slide-title">Tamper-Proof Recruitment on the Internet Computer</div>
+    <div class="slide-sub">Six milestones are cryptographically anchored on the ICP canister. Any discrepancy between the database and the blockchain PROVES tampering.</div>
+    <div class="bc-layout">
+      <div class="bc-milestones">
+        <div class="bc-block">
+          <div class="bc-num"><div class="bc-num-badge">1</div><div class="bc-num-line"></div></div>
+          <div class="bc-body">
+            <h4>🔐 Candidate Registration</h4>
+            <p>user_id · identity_hash · face_verified flag · registered_at timestamp</p>
+            <div class="bc-hash">SHA-256(user_id + email + timestamp)</div>
+          </div>
+        </div>
+        <div class="bc-block">
+          <div class="bc-num"><div class="bc-num-badge">2</div><div class="bc-num-line"></div></div>
+          <div class="bc-body">
+            <h4>🏢 Company Verification</h4>
+            <p>company_id · verification_hash · approved_at · admin who approved</p>
+            <div class="bc-hash">SHA-256(company_id + company_name)</div>
+          </div>
+        </div>
+        <div class="bc-block">
+          <div class="bc-num"><div class="bc-num-badge">3</div><div class="bc-num-line"></div></div>
+          <div class="bc-body">
+            <h4>📄 CV Submission / Application</h4>
+            <p>application_id · cv_hash_snap · job_id · applied_at · status snapshot</p>
+            <div class="bc-hash">SHA-256(cv_content + user_id + job_id)</div>
+          </div>
+        </div>
+        <div class="bc-block">
+          <div class="bc-num"><div class="bc-num-badge">4</div><div class="bc-num-line"></div></div>
+          <div class="bc-body">
+            <h4>📝 Exam Completion</h4>
+            <p>session_id · score (×100 int) · anti_cheat_hash · cheat_score · outcome</p>
+            <div class="bc-hash">SHA-256(violations_json) → anti_cheat_hash</div>
+          </div>
+        </div>
+        <div class="bc-block">
+          <div class="bc-num"><div class="bc-num-badge">5</div><div class="bc-num-line"></div></div>
+          <div class="bc-body">
+            <h4>🎤 Interview Completion</h4>
+            <p>session_id · score · transcript_hash · behavioral_data · completed_at</p>
+            <div class="bc-hash">SHA-256(full_transcript_text)</div>
+          </div>
+        </div>
+        <div class="bc-block">
+          <div class="bc-num"><div class="bc-num-badge">6</div><div class="bc-num-line"></div></div>
+          <div class="bc-body" style="margin-bottom:0">
+            <h4>🏆 Hiring Decision</h4>
+            <p>job_id · winner_user_ids · decision_hash · decided_at · sealedAt (canister time)</p>
+            <div class="bc-hash">SHA-256(winner_ids + job_id + decided_at)</div>
+          </div>
+        </div>
+      </div>
+      <div class="bc-right">
+        <div class="icp-panel glow-gold">
+          <h3><i class="fa-solid fa-cubes"></i> Why Internet Computer Protocol?</h3>
+          <div class="icp-row"><i class="fa-solid fa-check-circle"></i><span><strong>No gas fees</strong> — unlike Ethereum where each write costs unpredictable ETH gas, ICP canisters run on cycles with stable, predictable costs</span></div>
+          <div class="icp-row"><i class="fa-solid fa-check-circle"></i><span><strong>Canister model</strong> — smart contracts (canisters) serve HTTP requests directly. The ICP gateway Node.js app calls canister methods via the @dfinity/agent SDK</span></div>
+          <div class="icp-row"><i class="fa-solid fa-check-circle"></i><span><strong>Deterministic execution</strong> — the same inputs always produce the same state. No miner ordering games.</span></div>
+          <div class="icp-row"><i class="fa-solid fa-check-circle"></i><span><strong>320ms write avg</strong> — fully asynchronous. Blockchain writes never block the user flow.</span></div>
+        </div>
+        <div class="verify-box">
+          <h4>HASH VERIFICATION MECHANISM</h4>
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px">Stored on canister:</div>
+          <div class="hash-demo">a3f9e2b7c1d4081f9a6e3c5b7d2a8f4e1c0b9d6a3f9e2b7c1d4081f9a6e3c5b</div>
+          <p>Any party can recompute <code style="font-size:11px;background:rgba(255,255,255,.08);padding:2px 5px;border-radius:3px">SHA-256(violations_json)</code> from the database export and compare. A <strong style="color:var(--red)">mismatch proves tampering</strong> — the database was modified after submission.</p>
+        </div>
+        <div style="background:rgba(30,95,168,.1);border:1px solid rgba(30,95,168,.25);border-radius:10px;padding:14px 18px;font-size:13px">
+          <div style="font-family:'Syne',sans-serif;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.07em;margin-bottom:8px;text-transform:uppercase">Gateway Architecture</div>
+          <div style="display:flex;align-items:center;gap:8px;color:var(--text)"><code style="font-size:11px;background:rgba(255,255,255,.08);padding:2px 6px;border-radius:3px">Actor.createActor(idlFactory, &#123;agent, canisterId&#125;)</code></div>
+          <div style="font-size:12px;color:var(--muted);margin-top:6px">20+ Candid IDL method bindings · Async queue · Actor cache reset on network failure</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 11 — SECURITY
+═══════════════════════════════════════════ -->
+<div class="slide" id="s11">
+  <div class="slide-inner">
+    <div class="slide-tag">Security Design</div>
+    <div class="slide-title">Defense in Depth — Seven Security Layers</div>
+    <div class="slide-sub">Security is not a single control — it is a layered strategy where each layer assumes the previous one may fail.</div>
+    <div class="sec-layout">
+      <div class="sec-col">
+        <div class="sec-item">
+          <div class="icon" style="background:rgba(245,158,11,.1);color:var(--gold)"><i class="fa-solid fa-key"></i></div>
+          <div>
+            <h4>AES-256-CBC Exam Encryption</h4>
+            <p>Exam questions are stored as ciphertext in the database. The EXAM_AES_KEY never enters the DB — without it, questions are unreadable. IV is generated fresh per exam.</p>
+          </div>
+        </div>
+        <div class="sec-item">
+          <div class="icon" style="background:rgba(168,85,247,.1);color:#c084fc"><i class="fa-solid fa-hashtag"></i></div>
+          <div>
+            <h4>SHA-256 Document Hashing</h4>
+            <p>CVs, exam anti-cheat logs, and interview transcripts are hashed before being sent to the blockchain. Hash mismatch = proof of data modification.</p>
+          </div>
+        </div>
+        <div class="sec-item">
+          <div class="icon" style="background:rgba(30,95,168,.1);color:#93c5fd"><i class="fa-solid fa-database"></i></div>
+          <div>
+            <h4>PDO Parameterized Queries</h4>
+            <p>All database interactions use prepared statements via PHP PDO. User input is never interpolated into SQL strings — SQL injection is structurally impossible.</p>
+          </div>
+        </div>
+        <div class="sec-item">
+          <div class="icon" style="background:rgba(16,185,129,.1);color:#34d399"><i class="fa-solid fa-cookie-bite"></i></div>
+          <div>
+            <h4>HTTPOnly Session Cookies</h4>
+            <p>Session tokens set with HttpOnly and SameSite flags. JavaScript cannot access the cookie. XSS attacks cannot steal session tokens.</p>
+          </div>
+        </div>
+      </div>
+      <div class="sec-col">
+        <div class="sec-item">
+          <div class="icon" style="background:rgba(239,68,68,.1);color:#f87171"><i class="fa-solid fa-lock"></i></div>
+          <div>
+            <h4>Account Lockout</h4>
+            <p>After 5 failed login attempts, the account is locked for 15 minutes (login_attempts + locked_until columns). Brute-force attacks are rate-limited at the DB level.</p>
+          </div>
+        </div>
+        <div class="sec-item">
+          <div class="icon" style="background:rgba(20,184,166,.1);color:#2dd4bf"><i class="fa-solid fa-shield-halved"></i></div>
+          <div>
+            <h4>CSRF Protection</h4>
+            <p>All state-changing POST endpoints validate a session-bound CSRF token. Requests from forged origins are rejected before any processing occurs.</p>
+          </div>
+        </div>
+        <div class="sec-item">
+          <div class="icon" style="background:rgba(245,158,11,.08);color:var(--gold)"><i class="fa-solid fa-eye-slash"></i></div>
+          <div>
+            <h4>Anti-Cheat Outcome Hidden</h4>
+            <p>Candidates never see their integrity outcome (CLEAN/FLAGGED). The cheat_score and violations are accessible only to the hiring company via the admin dashboard.</p>
+          </div>
+        </div>
+      </div>
+      <div class="bc-final">
+        <i class="fa-solid fa-cubes"></i>
+        <div>
+          <p>Blockchain Immutability — The Final Integrity Layer</p>
+          <span>Even if a database admin modifies a record, the SHA-256 hash stored in the ICP canister will no longer match. The discrepancy is independently verifiable by any party — no trust in a central authority required.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 12 — TESTING
+═══════════════════════════════════════════ -->
+<div class="slide" id="s12">
+  <div class="slide-inner">
+    <div class="slide-tag">Testing & Performance</div>
+    <div class="slide-title">Measured Results Across All System Layers</div>
+    <div class="slide-sub">Performance testing validates that the system meets real-world latency requirements. Security testing confirms all attack vectors are blocked.</div>
+    <div class="test-layout">
+      <div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Performance Benchmarks</div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table>
+            <thead>
+              <tr><th>Operation</th><th>Avg</th><th>Max</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>CV Screening (1 candidate)</td><td class="val">2.4s</td><td class="max">4.3s</td></tr>
+              <tr><td>CV Screening (batch of 10)</td><td class="val">8.1s</td><td class="max">13.2s</td></tr>
+              <tr><td>Interview Question Generation</td><td class="val">1.8s</td><td class="max">3.5s</td></tr>
+              <tr><td>Anti-Cheat WebSocket Event</td><td class="val">&lt;50ms</td><td class="max">115ms</td></tr>
+              <tr><td>ICP Blockchain Write</td><td class="val">320ms</td><td class="max">810ms</td></tr>
+              <tr><td>Face Verification (5 descriptors)</td><td class="val">265ms</td><td class="max">440ms</td></tr>
+              <tr><td>AES-256 Exam Decryption</td><td class="val">&lt;5ms</td><td class="max">12ms</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div style="margin-top:14px;display:flex;gap:12px;flex-wrap:wrap">
+          <div class="stat-chip"><div class="val">0</div><div class="lbl">False face accepts</div></div>
+          <div class="stat-chip"><div class="val">100%</div><div class="lbl">Hash integrity detection</div></div>
+          <div class="stat-chip"><div class="val">320ms</div><div class="lbl">Blockchain write avg</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:12px">Security Testing Results</div>
+        <div class="sec-checks">
+          <div class="sec-check"><i class="fa-solid fa-circle-check tick"></i><div><strong>SQL Injection</strong> — All parametrized queries; injection attempts returned 0 rows</div></div>
+          <div class="sec-check"><i class="fa-solid fa-circle-check tick"></i><div><strong>CSRF Attack</strong> — Cross-origin POST requests rejected before processing</div></div>
+          <div class="sec-check"><i class="fa-solid fa-circle-check tick"></i><div><strong>Face Spoofing</strong> — Photo-on-screen attack rejected (distance 0.62 &gt; threshold 0.45)</div></div>
+          <div class="sec-check"><i class="fa-solid fa-circle-check tick"></i><div><strong>AES Encryption</strong> — Exam questions verified unreadable in DB without key</div></div>
+          <div class="sec-check"><i class="fa-solid fa-circle-check tick"></i><div><strong>Blockchain Tamper Detection</strong> — Modified DB record → hash mismatch detected in 100% of cases</div></div>
+          <div class="sec-check"><i class="fa-solid fa-circle-check tick"></i><div><strong>External Display Block</strong> — HDMI/projector connection detected; exam entry blocked</div></div>
+          <div class="sec-check"><i class="fa-solid fa-circle-check tick"></i><div><strong>Brute Force Login</strong> — Account locked after 5 failed attempts for 15 minutes</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 13 — CONCLUSION
+═══════════════════════════════════════════ -->
+<div class="slide" id="s13">
+  <div class="slide-inner">
+    <div class="slide-tag">Conclusion & Vision</div>
+    <div class="slide-title">RecruitChain — What Was Achieved</div>
+    <div class="divider"></div>
+    <div class="conc-layout">
+      <div class="conc-col">
+        <div style="font-size:12px;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:8px">Problems → Solutions</div>
+        <div class="prob-sol"><i class="fa-solid fa-arrow-right p"></i><i class="fa-solid fa-arrow-right s"></i><div><strong>Examination Fraud</strong> → 7-layer real-time proctoring + external display blocking prevents all known cheating vectors</div></div>
+        <div class="prob-sol"><i class="fa-solid fa-arrow-right p"></i><i class="fa-solid fa-arrow-right s"></i><div><strong>Credential Dishonesty</strong> → AI contextual evaluation + SHA-256 CV hash on blockchain makes document fabrication detectable</div></div>
+        <div class="prob-sol"><i class="fa-solid fa-arrow-right p"></i><i class="fa-solid fa-arrow-right s"></i><div><strong>Result Tampering</strong> → ICP blockchain anchors all 6 milestones; hash mismatch proves any post-submission modification</div></div>
+        <div class="prob-sol"><i class="fa-solid fa-arrow-right p"></i><i class="fa-solid fa-arrow-right s"></i><div><strong>Behavioral Blindness</strong> → AI interview captures confidence, hesitation, anomaly, and attention scores throughout session</div></div>
+        <div class="prob-sol"><i class="fa-solid fa-arrow-right p"></i><i class="fa-solid fa-arrow-right s"></i><div><strong>Operational Inefficiency</strong> → Automated pipeline from APPLIED to SELECTED — 2.4s CV screening replaces days of manual review</div></div>
+      </div>
+      <div class="conc-col">
+        <div class="vision-col" style="flex-direction:column;gap:10px">
+          <div style="font-size:12px;font-weight:700;letter-spacing:.07em;color:var(--muted);text-transform:uppercase;margin-bottom:4px">Open Architecture & Vision</div>
+          <div class="vision-chip"><i class="fa-solid fa-flag"></i><span>Aligns with Rwanda Vision 2050 — digital economy and fair, merit-based employment</span></div>
+          <div class="vision-chip"><i class="fa-solid fa-code-branch"></i><span>Open-source architecture — extensible by future teams for other sectors (universities, NGOs)</span></div>
+          <div class="vision-chip" style="border-color:rgba(245,158,11,.3);background:rgba(245,158,11,.05)"><i class="fa-solid fa-cubes" style="color:var(--gold)"></i><span style="color:var(--gold)">First Rwandan open-source AI + Blockchain recruitment platform</span></div>
+          <div class="vision-chip"><i class="fa-solid fa-scale-balanced"></i><span>Blockchain records are legally defensible — verifiable by any third party without trusting the system administrator</span></div>
+        </div>
+      </div>
+      <div class="quote-box">
+        <blockquote>"RecruitChain demonstrates that blockchain is not merely a buzzword in recruitment — it is the only technology capable of providing legally defensible, independently verifiable proof that hiring decisions were made on the basis of merit, not manipulation."</blockquote>
+        <cite>— MBARUSHIMANA Danny, RecruitChain Research Report, RP-Tumba 2026</cite>
+      </div>
+      <div class="thank-you">
+        <h2>Thank You</h2>
+        <p>Questions are welcome · Author: MBARUSHIMANA Danny · ykdann53@gmail.com</p>
+        <div style="margin-top:16px;display:flex;justify-content:center;gap:16px;flex-wrap:wrap">
+          <div style="font-size:12px;color:var(--muted);background:var(--navy2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;display:flex;align-items:center;gap:6px"><i class="fa-brands fa-github" style="color:var(--blue)"></i> github.com/damntim</div>
+          <div style="font-size:12px;color:var(--muted);background:var(--navy2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-link" style="color:var(--gold)"></i> ICP Canister: t63gs-up777-77776-aaaba-cai</div>
+          <div style="font-size:12px;color:var(--muted);background:var(--navy2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;display:flex;align-items:center;gap:6px"><i class="fa-solid fa-school" style="color:var(--green)"></i> RP-Tumba College of Technology · June 2026</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     SLIDE 14 — VERIFY YOUR RECORD
+═══════════════════════════════════════════ -->
+<div class="slide" id="s14">
+  <div class="slide-inner">
+    <div class="slide-tag" style="color:var(--gold)">⛓ Public Blockchain Audit</div>
+    <div class="slide-title">Verify Any Result — No Account Needed</div>
+    <div class="slide-sub">Every candidate receives a unique verification code after their exam or interview. Anyone can use it to confirm that the result was recorded on the ICP blockchain and has not been modified.</div>
+
+    <div class="verify-layout">
+
+      <!-- LEFT — How codes work -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+
+        <!-- Code examples -->
+        <div style="display:flex;gap:12px;flex-wrap:wrap">
+          <div class="verify-code-demo" style="flex:1;min-width:160px;box-shadow:0 0 20px rgba(245,158,11,.2)">
+            <div class="code-label"><i class="fa-solid fa-file-pen" style="color:var(--gold);margin-right:4px"></i>Exam Code</div>
+            <div class="code-value">RC-A3F9E2B7C1</div>
+            <div style="font-size:11px;color:var(--muted)">Shown on exam-done page &amp; dashboard</div>
+          </div>
+          <div class="verify-code-demo" style="flex:1;min-width:160px;border-color:rgba(30,95,168,.5);box-shadow:0 0 16px rgba(30,95,168,.15)">
+            <div class="code-label" style="color:#60a5fa"><i class="fa-solid fa-microphone-lines" style="color:#60a5fa;margin-right:4px"></i>Interview Code</div>
+            <div class="code-value" style="color:#93c5fd;letter-spacing:.18em">IV-D8F2A419C0</div>
+            <div style="font-size:11px;color:var(--muted)">Shown after interview session ends</div>
+          </div>
+        </div>
+
+        <!-- Where to find the code -->
+        <div class="card card-sm">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:10px">Where candidates find their code</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px"><i class="fa-solid fa-file-circle-check" style="color:var(--green);width:18px"></i> Exam completion page — large amber card</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px"><i class="fa-solid fa-gauge-high" style="color:var(--blue);width:18px"></i> Personal dashboard — "Verify Code" column in applications table</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px"><i class="fa-solid fa-briefcase" style="color:var(--gold);width:18px"></i> Job cards on the homepage — amber "On-Chain" badge links to verifier</div>
+          </div>
+        </div>
+
+        <!-- Watchdog worker -->
+        <div class="wdog-badge">
+          <i class="fa-solid fa-robot"></i>
+          <div>
+            <strong style="color:var(--text)">Auto-Revert Watchdog (runs every 5 min)</strong><br>
+            If the watchdog detects a DB↔blockchain hash mismatch, it reverts the record to the blockchain value, sets <code style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px">tamper_flag=1</code>, and logs to <code style="font-size:10px;background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px">integrity_audit_log</code>. The live audit feed is visible on the verify page.
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT — What the verifier shows -->
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:4px">verify.php — possible outcomes</div>
+
+        <div class="verify-result intact">
+          <h4><i class="fa-solid fa-shield-check" style="font-size:16px;margin-right:6px"></i>INTACT — No Tampering</h4>
+          <p>Database hash matches the ICP canister hash exactly. The result is certified unmodified since the moment it was submitted.</p>
+          <div style="font-family:'Syne',sans-serif;font-size:10px;color:rgba(16,185,129,.7);margin-top:8px;background:rgba(16,185,129,.05);border-radius:4px;padding:5px 8px">
+            DB&nbsp;&nbsp;→ a3f9e2b7c1d4081f9a6e3c5b7d2a8f4e<br>
+            ICP&nbsp;→ a3f9e2b7c1d4081f9a6e3c5b7d2a8f4e ✓
+          </div>
+        </div>
+
+        <div class="verify-result tampered">
+          <h4><i class="fa-solid fa-triangle-exclamation" style="font-size:16px;margin-right:6px"></i>TAMPERED — Hash Mismatch</h4>
+          <p>Database hash differs from the canister hash. The record was modified after being anchored. Both hashes are shown side-by-side as evidence.</p>
+          <div style="font-family:'Syne',sans-serif;font-size:10px;color:rgba(239,68,68,.8);margin-top:8px;background:rgba(239,68,68,.05);border-radius:4px;padding:5px 8px">
+            DB&nbsp;&nbsp;→ <span style="color:#f87171">99ffaab312cafe00dead…</span> ✗<br>
+            ICP&nbsp;→ a3f9e2b7c1d4081f9a6e3c5b7d2a8f4e
+          </div>
+        </div>
+
+        <div class="card card-sm" style="background:rgba(245,158,11,.04);border-color:rgba(245,158,11,.25)">
+          <div style="font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--gold);margin-bottom:8px">Full Scan Mode</div>
+          <p style="font-size:12px;color:var(--muted);line-height:1.6">The verifier also supports a full scan of all anchored records — no code needed. Returns each record's status (INTACT / TAMPERED / UNANCHORED) plus a live audit log feed of every integrity event detected by the system.</p>
+        </div>
+
+        <div style="text-align:center;padding:10px 0">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:6px">Public URL — open to everyone:</div>
+          <div style="font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--gold);background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);border-radius:8px;padding:8px 18px;display:inline-block">
+            /verify.php
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- /deck -->
+
+<!-- ── PROGRESS & NAV ── -->
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+<div class="nav">
+  <button class="nav-btn" id="prevBtn" onclick="goTo(current-1)"><i class="fa-solid fa-chevron-left"></i></button>
+  <div class="slide-counter" id="counter">1 / 14</div>
+  <button class="nav-btn" id="nextBtn" onclick="goTo(current+1)"><i class="fa-solid fa-chevron-right"></i></button>
+</div>
+
+<script>
+const TOTAL = 14;
+let current = 1;
+
+function goTo(n) {
+  if (n < 1 || n > TOTAL) return;
+  document.getElementById('s' + current).classList.remove('active');
+  current = n;
+  document.getElementById('s' + current).classList.add('active');
+  document.getElementById('counter').textContent = current + ' / ' + TOTAL;
+  document.getElementById('progressFill').style.width = (current / TOTAL * 100) + '%';
+  document.getElementById('prevBtn').style.opacity = current === 1 ? '0.3' : '1';
+  document.getElementById('nextBtn').style.opacity = current === TOTAL ? '0.3' : '1';
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === ' ') { e.preventDefault(); goTo(current + 1); }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); goTo(current - 1); }
+});
+
+// Touch/swipe
+let tx = 0;
+document.addEventListener('touchstart', e => { tx = e.touches[0].clientX; });
+document.addEventListener('touchend', e => {
+  const dx = tx - e.changedTouches[0].clientX;
+  if (Math.abs(dx) > 50) goTo(dx > 0 ? current + 1 : current - 1);
+});
+
+goTo(1);
+
+// Slide 1 canvas animation
+(function() {
+  const canvas = document.getElementById('stars');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, nodes = [];
+
+  function resize() {
+    W = canvas.width = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+
+  function init() {
+    resize();
+    nodes = [];
+    const n = 60;
+    for (let i = 0; i < n; i++) {
+      nodes.push({
+        x: Math.random() * W, y: Math.random() * H,
+        vx: (Math.random() - 0.5) * 0.4, vy: (Math.random() - 0.5) * 0.4,
+        r: Math.random() * 2 + 1,
+        col: Math.random() > 0.7 ? '#F59E0B' : '#1E5FA8'
+      });
+    }
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+    for (let i = 0; i < nodes.length; i++) {
+      const a = nodes[i];
+      a.x += a.vx; a.y += a.vy;
+      if (a.x < 0 || a.x > W) a.vx *= -1;
+      if (a.y < 0 || a.y > H) a.vy *= -1;
+      for (let j = i + 1; j < nodes.length; j++) {
+        const b = nodes[j];
+        const d = Math.hypot(a.x - b.x, a.y - b.y);
+        if (d < 130) {
+          ctx.beginPath();
+          ctx.moveTo(a.x, a.y);
+          ctx.lineTo(b.x, b.y);
+          ctx.strokeStyle = 'rgba(30,95,168,' + (0.25 * (1 - d / 130)) + ')';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+      ctx.beginPath();
+      ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+      ctx.fillStyle = a.col;
+      ctx.globalAlpha = 0.7;
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+    requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', init);
+  init();
+  draw();
+})();
+
+// Embedding vis dots
+(function() {
+  const el = document.getElementById('embeddingVis');
+  if (!el) return;
+  const clusters = [
+    {cx:30, cy:40, col:'#3b82f6', count:5},
+    {cx:70, cy:55, col:'#10B981', count:5},
+    {cx:55, cy:25, col:'#f87171', count:3},
+  ];
+  let html = '';
+  clusters.forEach(c => {
+    for (let i = 0; i < c.count; i++) {
+      const x = c.cx + (Math.random()-0.5)*16;
+      const y = c.cy + (Math.random()-0.5)*16;
+      html += `<div class="embed-dot" style="left:${x}%;top:${y}%;background:${c.col}"></div>`;
+    }
+  });
+  el.querySelector('.dots').innerHTML = html;
+})();
+</script>
+</body>
+</html>

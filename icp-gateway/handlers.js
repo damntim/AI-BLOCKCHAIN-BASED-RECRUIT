@@ -191,14 +191,24 @@ async function declareWinners(jobId, winnerIds, finalScores) {
 async function getHiringResult(jobId) {
     const raw  = await call(a => a.getHiringResult(BigInt(jobId)));
     const data = unwrapOpt(raw);
+    if (!data) return { success: true, data: null };
+
+    const winnerIds = data.winnerIds.map(Number);
+    // Recompute the same SHA-256 hash the PHP side stores so the verifier can compare
+    const crypto = require('crypto');
+    const winnersHash = crypto.createHash('sha256')
+        .update(JSON.stringify(winnerIds))
+        .digest('hex');
+
     return {
         success: true,
-        data: data ? {
+        data: {
             jobId:       Number(data.jobId),
-            winnerIds:   data.winnerIds.map(Number),
+            winnerIds,
             finalScores: data.finalScores.map(Number),
             declaredAt:  Number(data.declaredAt),
-        } : null,
+            winnersHash,
+        },
     };
 }
 

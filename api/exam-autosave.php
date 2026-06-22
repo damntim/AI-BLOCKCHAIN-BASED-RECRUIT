@@ -141,8 +141,9 @@ try {
     };
     if ($reason && str_contains(strtolower($reason), 'terminat')) $outcome = 'FLAGGED';
 
-    pdo()->prepare("UPDATE exam_sessions SET submitted_at=NOW(),total_score=?,outcome=?,termination_reason=?,answer_analytics=?,cheat_score=? WHERE id=?")
-         ->execute([$finalScore, $outcome, $reason ?: null, json_encode($aiScoreDetails), $cheatScore, $sessionId]);
+    $verifyCode = 'RC-' . strtoupper(substr(hash('sha256', $sessionId . current_user_id() . $jobId . 'exam' . time()), 0, 10));
+    pdo()->prepare("UPDATE exam_sessions SET submitted_at=NOW(),total_score=?,outcome=?,termination_reason=?,answer_analytics=?,cheat_score=?,verify_code=? WHERE id=?")
+         ->execute([$finalScore, $outcome, $reason ?: null, json_encode($aiScoreDetails), $cheatScore, $verifyCode, $sessionId]);
 
     pdo()->prepare("UPDATE applications SET status='EXAM_DONE' WHERE job_id=? AND user_id=?")
          ->execute([$jobId, current_user_id()]);
@@ -162,7 +163,7 @@ try {
         }
     } catch (\Throwable $e) { error_log("ICP failed: ".$e->getMessage()); }
 
-    echo json_encode(['success'=>true,'score'=>$finalScore]);
+    echo json_encode(['success'=>true,'score'=>$finalScore,'verifyCode'=>$verifyCode]);
 
 } catch (InvalidArgumentException $e) {
     http_response_code(400); echo json_encode(['success'=>false,'error'=>$e->getMessage()]);

@@ -15,12 +15,15 @@ if ($role === 'SEEKER') {
     $apps = pdo()->prepare("
         SELECT a.*, j.title, c.company_name,
                COALESCE(j.marks_published, 0) as marks_published,
-               es.total_score as exam_score, es.outcome as exam_outcome
+               es.total_score as exam_score, es.outcome as exam_outcome,
+               es.verify_code as exam_verify_code,
+               iv.verify_code as iv_verify_code
         FROM applications a
         JOIN jobs j ON a.job_id=j.id
         JOIN companies c ON j.company_id=c.id
         LEFT JOIN exams ex ON ex.job_id=j.id
         LEFT JOIN exam_sessions es ON es.exam_id=ex.id AND es.user_id=a.user_id AND es.submitted_at IS NOT NULL
+        LEFT JOIN interview_sessions iv ON iv.job_id=j.id AND iv.user_id=a.user_id AND iv.ended_at IS NOT NULL
         WHERE a.user_id=? ORDER BY a.applied_at DESC
     ");
     $apps->execute([$uid]);
@@ -223,6 +226,7 @@ $pageTitle = 'Dashboard';
               <th class="px-6 py-3 text-left text-xs font-bold text-[#4A6380] uppercase tracking-wider">Job</th>
               <th class="px-6 py-3 text-left text-xs font-bold text-[#4A6380] uppercase tracking-wider">Company</th>
               <th class="px-6 py-3 text-left text-xs font-bold text-[#4A6380] uppercase tracking-wider w-[110px]">Status</th>
+              <th class="px-6 py-3 text-left text-xs font-bold text-amber-600 uppercase tracking-wider"><i class="fa-solid fa-cubes mr-1"></i>Verify Code</th>
               <th class="px-6 py-3 text-right text-xs font-bold text-[#4A6380] uppercase tracking-wider">Action</th>
             </tr>
           </thead>
@@ -252,6 +256,27 @@ $pageTitle = 'Dashboard';
                 <span class="inline-flex items-center gap-1 px-2 py-1 rounded-[6px] <?= $sc ?> text-[10px] font-semibold whitespace-nowrap">
                   <i class="fa-solid <?= $icon ?>"></i> <?= $label ?>
                 </span>
+              </td>
+              <td class="px-6 py-4">
+                <?php
+                  $vcode = $app['exam_verify_code'] ?? $app['iv_verify_code'] ?? null;
+                ?>
+                <?php if ($vcode): ?>
+                <div class="flex items-center gap-2">
+                  <span class="font-mono text-xs font-bold text-amber-600 bg-amber-50 border border-amber-200 px-2 py-1 rounded-[5px] tracking-wider"><?= htmlspecialchars($vcode) ?></span>
+                  <button title="Copy code"
+                          onclick="navigator.clipboard.writeText('<?= htmlspecialchars($vcode) ?>').then(()=>this.innerHTML='<i class=\'fa-solid fa-check text-green-500\'></i>')"
+                          class="text-[#94a3b8] hover:text-amber-500 transition-colors text-xs">
+                    <i class="fa-solid fa-copy"></i>
+                  </button>
+                  <a href="/verify.php?code=<?= urlencode($vcode) ?>" target="_blank" title="Verify on blockchain"
+                     class="text-[#94a3b8] hover:text-[#1E5FA8] transition-colors text-xs">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                  </a>
+                </div>
+                <?php else: ?>
+                <span class="text-xs text-[#94a3b8]">—</span>
+                <?php endif; ?>
               </td>
               <td class="px-6 py-4 text-right">
                 <?php if ($app['status'] === 'EXAM_INVITED'): ?>

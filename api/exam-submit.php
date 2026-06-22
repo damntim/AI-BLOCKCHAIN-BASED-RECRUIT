@@ -132,8 +132,9 @@ try {
          ->execute([$warnings, json_encode($combinedLog), json_encode($wordCounts), json_encode($timePerQ),
                     json_encode($aiDetails), $isSuspicious?1:0, $reason, $cheatScore, $sessionId]);
 
-    pdo()->prepare("UPDATE exam_sessions SET submitted_at=NOW(),total_score=?,outcome=? WHERE id=?")
-         ->execute([$totalScore, $outcome, $sessionId]);
+    $verifyCode = 'RC-' . strtoupper(substr(hash('sha256', $sessionId . current_user_id() . $jobId . 'exam' . time()), 0, 10));
+    pdo()->prepare("UPDATE exam_sessions SET submitted_at=NOW(),total_score=?,outcome=?,verify_code=? WHERE id=?")
+         ->execute([$totalScore, $outcome, $verifyCode, $sessionId]);
 
     pdo()->prepare("UPDATE applications SET status='EXAM_DONE' WHERE job_id=? AND user_id=?")
          ->execute([$jobId, current_user_id()]);
@@ -157,8 +158,9 @@ try {
     }
 
     echo json_encode([
-        'success' => true,
-        'score'   => $totalScore,
+        'success'     => true,
+        'score'       => $totalScore,
+        'verifyCode'  => $verifyCode,
     ]);
 } catch (InvalidArgumentException $e) {
     http_response_code(400);

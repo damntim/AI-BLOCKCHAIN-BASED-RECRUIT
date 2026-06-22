@@ -76,24 +76,10 @@ def exam_generate(payload: ExamGeneratePayload):
                 "difficulty": "easy",
                 "points": 2,
             },
-            {
-                "text": "How would you handle a disagreement with a colleague?",
-                "type": "scenario",
-                "scenario": "You and a coworker disagree on the approach to a project task.",
-                "expected_answer": "Listen actively, discuss calmly, find a compromise, escalate if needed.",
-                "difficulty": "medium",
-                "points": 5,
-            },
-            {
-                "text": "Why is time management important in the workplace?",
-                "type": "written",
-                "expected_answer": "Improves productivity, meets deadlines, reduces stress, shows professionalism.",
-                "difficulty": "easy",
-                "points": 5,
-            },
+         
         ],
-        "total_minutes": 18,
-        "total_points": 15,
+        "total_minutes": 8,
+        "total_points": 5,
         "_mode": "testing",
     }
     # =====================================================================

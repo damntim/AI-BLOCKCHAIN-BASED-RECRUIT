@@ -94,6 +94,7 @@ try {
         'ai_attention_score'  => $attnScore,
     ];
 
+    $verifyCode = 'IV-' . strtoupper(substr(hash('sha256', $sessionId . current_user_id() . $jobId . 'iv' . time()), 0, 10));
     pdo()->prepare("
         UPDATE interview_sessions
         SET ended_at=NOW(),
@@ -102,14 +103,14 @@ try {
             confidence_score=?, anomaly_score=?, attention_score=?,
             total_score=?, ai_report=?,
             transcript_hash=?, violation_log=?, behavioral_log=?,
-            total_violations=?
+            total_violations=?, verify_code=?
         WHERE id=?
     ")->execute([
         $techScore, $commScore, $behScore, $psScore, $profScore,
         $confScore, $anomScore, $attnScore,
         $totalScore, $aiReport,
         $transcriptHash, json_encode($dbViolations), json_encode($finalBehavioral),
-        $totalViolations, $sessionId,
+        $totalViolations, $verifyCode, $sessionId,
     ]);
 
     pdo()->prepare("UPDATE applications SET status='INTERVIEW_DONE' WHERE job_id=? AND user_id=?")
